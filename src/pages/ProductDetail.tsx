@@ -156,9 +156,9 @@ const ProductDetail = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex flex-col justify-center py-0 lg:py-2"
             >
-              <div className="mb-2 inline-flex self-start bg-[#f4f0ed] px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.16em] text-[#a35d70]">
+              {/* <div className="mb-2 inline-flex self-start bg-[#f4f0ed] px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.16em] text-[#a35d70]">
                 {product.category}
-              </div>
+              </div> */}
 
               <h1 className="mb-2 max-w-xl font-serif text-3xl leading-none text-[#242024] md:text-5xl">
                 {product.name}

@@ -34,7 +34,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { callAdminData } from '@/lib/adminData';
 import { formatPrice } from '@/lib/currency';
 import { toast } from 'sonner';
-import { categories } from '@/data/products';
+import { useAllCategories } from '@/hooks/useCategories';
 
 interface Product {
   id: string;
@@ -71,6 +71,7 @@ const initialFormData = {
 
 const AdminProducts = () => {
   const { getToken } = useAuth();
+  const { data: categories = [] } = useAllCategories();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -449,8 +450,8 @@ const AdminProducts = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.icon} {cat.name}
+                          <SelectItem key={cat.id} value={cat.slug}>
+                            {cat.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

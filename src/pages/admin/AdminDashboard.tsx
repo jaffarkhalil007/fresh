@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, ShoppingCart, Users, LogOut, 
-  Menu, X, TrendingUp, DollarSign, ShoppingBag, Percent, Tag 
+  Menu, X, TrendingUp, DollarSign, ShoppingBag, Percent, Tag,
+  LayoutGrid, MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +16,9 @@ import AdminDiscountSettings from '@/components/admin/AdminDiscountSettings';
 import AdminCoupons from '@/components/admin/AdminCoupons';
 import AdminCustomers from '@/components/admin/AdminCustomers';
 import AdminChatInbox from '@/components/admin/AdminChatInbox';
-import { MessageSquare } from 'lucide-react';
+import AdminCategories from '@/components/admin/AdminCategories';
 
-type TabType = 'dashboard' | 'products' | 'orders' | 'discounts' | 'coupons' | 'customers' | 'chats';
+type TabType = 'dashboard' | 'products' | 'categories' | 'orders' | 'discounts' | 'coupons' | 'customers' | 'chats';
 
 interface DashboardStats {
   totalProducts: number;
@@ -94,6 +95,7 @@ const AdminDashboard = () => {
   const navItems = [
     { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'products' as TabType, label: 'Products', icon: Package },
+    { id: 'categories' as TabType, label: 'Categories', icon: LayoutGrid },
     { id: 'orders' as TabType, label: 'Orders', icon: ShoppingCart },
     { id: 'chats' as TabType, label: 'Support Chats', icon: MessageSquare },
     { id: 'coupons' as TabType, label: 'Coupons', icon: Tag },
@@ -216,6 +218,7 @@ const AdminDashboard = () => {
           )}
 
           {activeTab === 'products' && <AdminProducts />}
+          {activeTab === 'categories' && <AdminCategories />}
           {activeTab === 'orders' && <AdminOrders />}
           {activeTab === 'chats' && <AdminChatInbox />}
           {activeTab === 'coupons' && <AdminCoupons />}
