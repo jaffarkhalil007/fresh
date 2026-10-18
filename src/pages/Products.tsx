@@ -191,7 +191,7 @@ const Products = () => {
       <main className="flex-1 bg-[#fffdfc] px-4 pb-24 pt-[50px] md:px-8 md:pb-20 md:pt-24 lg:pt-36">
         <div className="mx-auto max-w-[1440px]">
         {/* <section className="mb-8 border-b border-[#e8e3e5] pb-8 md:mb-10 md:pb-10">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#a35d70]">The HAMAASH shop</p>
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#186049]">The HAMAASH shop</p>
           <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
             <div>
               <h1 className="font-serif text-4xl leading-none text-[#242024] md:text-6xl">
@@ -254,7 +254,7 @@ const Products = () => {
                 >
                   <SelectTrigger className="h-10 w-44 rounded-full border-[#d8cfd3] bg-white text-sm">
                     <div className="flex items-center gap-2">
-                      <Filter className="h-3.5 w-3.5 text-[#a35d70]" />
+                      <Filter className="h-3.5 w-3.5 text-[#186049]" />
                       <SelectValue placeholder="Filter by" />
                     </div>
                   </SelectTrigger>
@@ -304,7 +304,7 @@ const Products = () => {
 
             <div className="mb-5 flex flex-wrap items-center gap-2">
               {selectedCategories.map((catId) => (
-                <Badge key={catId} className="rounded-full border border-[#c97685]/40 bg-[#f4dfe3] px-3 py-1.5 text-[10px] font-medium text-[#a35d70]">
+                <Badge key={catId} className="rounded-full border border-[#186049]/40 bg-[#e3f0ea] px-3 py-1.5 text-[10px] font-medium text-[#186049]">
                   {categories.find((c) => c.id === catId)?.name}
                   <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => toggleCategory(catId)} />
                 </Badge>

@@ -78,7 +78,7 @@ const SearchAutocomplete = ({ className, onClose }: SearchAutocompleteProps) => 
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(filteredProducts.length > 0)}
-          className="pl-10 pr-10 h-10 w-full bg-muted border border-hairline focus-visible:ring-[#a35d70] focus-visible:border-[#a35d70] rounded-pill text-ink placeholder:text-ink-muted"
+          className="pl-10 pr-10 h-10 w-full bg-muted border border-hairline focus-visible:ring-[#186049] focus-visible:border-[#186049] rounded-pill text-ink placeholder:text-ink-muted"
         />
         {query && (
           <Button
@@ -123,7 +123,7 @@ const SearchAutocomplete = ({ className, onClose }: SearchAutocompleteProps) => 
                       <p className="font-medium text-ink truncate">{product.name}</p>
                       <p className="text-xs text-ink-muted capitalize">{product.category}</p>
                     </div>
-                    <span className="text-[#a35d70] font-bold text-sm">₨ {product.price}</span>
+                    <span className="text-[#186049] font-bold text-sm">₨ {product.price}</span>
                   </button>
                 </li>
               ))}
@@ -136,7 +136,7 @@ const SearchAutocomplete = ({ className, onClose }: SearchAutocompleteProps) => 
                       setIsOpen(false);
                       onClose?.();
                     }}
-                    className="w-full px-4 py-2 text-left text-[#a35d70] hover:bg-canvas-warm transition-colors text-sm"
+                    className="w-full px-4 py-2 text-left text-[#186049] hover:bg-canvas-warm transition-colors text-sm"
                   >
                     Search for "{query}"...
                   </button>

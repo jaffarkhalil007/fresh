@@ -17,7 +17,7 @@ const PromoBanner = ({ products }: PromoBannerProps) => {
     <section className="bg-[#fffdfc] py-8 md:py-12">
       <div className="mx-auto max-w-[1440px] px-4 md:px-8">
         <div className="mb-5 flex items-end justify-between">
-          <div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a35d70]">Only at Hamaash </p><h2 className="mt-1 font-serif text-3xl text-[#242024]">Fresh picks, <em className="text-[#a35d70]">better prices</em></h2></div>
+          <div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#186049]">Only at Hamaash </p><h2 className="mt-1 font-serif text-3xl text-[#242024]">Fresh picks, <em className="text-[#186049]">better prices</em></h2></div>
           <Link to="/products?filter=promotional" className="text-[10px] uppercase tracking-[0.12em] text-[#5f595d]">Shop sale →</Link>
         </div>
         <div className="grid gap-3 md:grid-cols-2">

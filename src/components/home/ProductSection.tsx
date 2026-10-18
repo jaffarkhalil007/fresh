@@ -33,7 +33,7 @@ const ProductSection = ({
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a35d70]"
+                className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#186049]"
               >
                 {badge}
               </motion.div>
@@ -70,7 +70,7 @@ const ProductSection = ({
             >
               <Link 
                 to={viewAllLink}
-                className="group inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5f595d] transition-colors hover:text-[#a35d70]"
+                className="group inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5f595d] transition-colors hover:text-[#186049]"
               >
                 View All
                 <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />

@@ -41,7 +41,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/faq"
-                  className="hover:text-[#a35d70] transition-colors"
+                  className="hover:text-[#186049] transition-colors"
                 >
                   Help center
                 </Link>
@@ -49,7 +49,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/orders"
-                  className="hover:text-[#a35d70] transition-colors"
+                  className="hover:text-[#186049] transition-colors"
                 >
                   Track my order
                 </Link>
@@ -57,7 +57,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/contact"
-                  className="hover:text-[#a35d70] transition-colors"
+                  className="hover:text-[#186049] transition-colors"
                 >
                   Returns & refunds
                 </Link>
@@ -65,7 +65,7 @@ const Footer = () => {
               <li>
                 <Link
                   to="/contact"
-                  className="hover:text-[#a35d70] transition-colors"
+                  className="hover:text-[#186049] transition-colors"
                 >
                   Delivery information
                 </Link>
@@ -79,25 +79,25 @@ const Footer = () => {
             </h4>
             <ul className="space-y-3 text-sm text-[#777077]">
               <li>
-                <Link to="/" className="hover:text-[#a35d70] transition-colors">
+                <Link to="/" className="hover:text-[#186049] transition-colors">
                   Our story
                 </Link>
               </li>
               <li>
                 <Link
                   to="/contact"
-                  className="hover:text-[#a35d70] transition-colors"
+                  className="hover:text-[#186049] transition-colors"
                 >
                   Careers
                 </Link>
               </li>
               <li>
-                <Link to="/" className="hover:text-[#a35d70] transition-colors">
+                <Link to="/" className="hover:text-[#186049] transition-colors">
                   Our impact
                 </Link>
               </li>
               <li>
-                <Link to="/" className="hover:text-[#a35d70] transition-colors">
+                <Link to="/" className="hover:text-[#186049] transition-colors">
                   The journal
                 </Link>
               </li>
@@ -119,11 +119,11 @@ const Footer = () => {
                 type="email"
                 placeholder="Your email address"
                 aria-label="Your email address"
-                className="h-11 w-full border-b border-[#bdb5ba] bg-transparent px-0 text-sm text-[#242024] outline-none placeholder:text-[#9a9298] focus:border-[#a35d70]"
+                className="h-11 w-full border-b border-[#bdb5ba] bg-transparent px-0 text-sm text-[#242024] outline-none placeholder:text-[#9a9298] focus:border-[#186049]"
               />
               <button
                 type="submit"
-                className="self-end text-[10px] uppercase tracking-[0.12em] text-[#a35d70]"
+                className="self-end text-[10px] uppercase tracking-[0.12em] text-[#186049]"
               >
                 Sign up
               </button>

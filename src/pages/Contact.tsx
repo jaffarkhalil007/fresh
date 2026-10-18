@@ -117,9 +117,9 @@ const Contact = () => {
         <section className="border-b border-[#e8e3e5] bg-[#d9e7e3] pt-36 md:pt-40">
           <div className="mx-auto grid max-w-[1440px] gap-8 px-4 pb-12 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:pb-16">
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-              <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a35d70]">The Hamaash help desk</p>
+              <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#186049]">The Hamaash help desk</p>
               <h1 className="max-w-xl font-serif text-5xl leading-[0.95] text-[#242024] md:text-7xl">
-                Let&apos;s make it <em className="text-[#a35d70]">easy.</em>
+                Let&apos;s make it <em className="text-[#186049]">easy.</em>
               </h1>
             </motion.div>
             <motion.p
@@ -142,7 +142,7 @@ const Contact = () => {
               viewport={{ once: true }}
               className="space-y-3"
             >
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a35d70]">Reach out</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#186049]">Reach out</p>
               <h2 className="mb-7 font-serif text-4xl text-[#242024]">
                 Contact Information
               </h2>
@@ -153,10 +153,10 @@ const Contact = () => {
                         href={item.link}
                         target={item.link.startsWith('http') ? '_blank' : undefined}
                         rel={item.link.startsWith('http') ? 'noopener noreferrer' : undefined}
-                        className="flex items-center gap-4 transition-colors hover:text-[#a35d70]"
+                        className="flex items-center gap-4 transition-colors hover:text-[#186049]"
                       >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4dfe3]">
-                          <item.icon className="h-4 w-4 text-[#a35d70]" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e3f0ea]">
+                          <item.icon className="h-4 w-4 text-[#186049]" />
                         </div>
                         <div>
                           <p className="text-[10px] uppercase tracking-[0.14em] text-[#9a9298]">{item.title}</p>
@@ -165,8 +165,8 @@ const Contact = () => {
                       </a>
                     ) : (
                       <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4dfe3]">
-                          <item.icon className="h-4 w-4 text-[#a35d70]" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e3f0ea]">
+                          <item.icon className="h-4 w-4 text-[#186049]" />
                         </div>
                         <div>
                           <p className="text-[10px] uppercase tracking-[0.14em] text-[#9a9298]">{item.title}</p>
@@ -205,7 +205,7 @@ const Contact = () => {
               className="bg-[#f4f0ed] p-6 md:p-8"
             >
                 <div className="mb-8">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a35d70]">We&apos;re listening</p>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#186049]">We&apos;re listening</p>
                   <h2 className="font-serif text-4xl text-[#242024]">Send us a message</h2>
                 </div>
                   <form onSubmit={handleSubmit} className="space-y-5">
@@ -218,7 +218,7 @@ const Contact = () => {
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           required
                           placeholder="Your name"
-                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#c97685]"
+                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#186049]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -230,7 +230,7 @@ const Contact = () => {
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           required
                           placeholder="your@email.com"
-                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#c97685]"
+                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#186049]"
                         />
                       </div>
                     </div>
@@ -244,7 +244,7 @@ const Contact = () => {
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                           placeholder="+92 XXX XXXXXXX"
-                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#c97685]"
+                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#186049]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -255,7 +255,7 @@ const Contact = () => {
                           onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                           required
                           placeholder="How can we help?"
-                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#c97685]"
+                          className="mt-2 h-12 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#186049]"
                         />
                       </div>
                     </div>
@@ -269,7 +269,7 @@ const Contact = () => {
                         required
                         placeholder="Tell us more about your inquiry..."
                         rows={5}
-                        className="mt-2 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#c97685]"
+                        className="mt-2 rounded-none border-[#d8cfd3] bg-[#fffdfc] text-[#3f393e] focus-visible:ring-[#186049]"
                       />
                     </div>
 

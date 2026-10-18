@@ -89,7 +89,7 @@ const Cart = () => {
             className="mb-10 flex items-center gap-3"
           >
             <h1 className="font-serif text-4xl text-[#242024] md:text-5xl">Your Cart</h1>
-            <span className="bg-[#f4f0ed] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#a35d70]">
+            <span className="bg-[#f4f0ed] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#186049]">
               {items.length} {items.length === 1 ? 'item' : 'items'}
             </span>
           </motion.div>
@@ -135,7 +135,7 @@ const Cart = () => {
                         <div className="flex-1 flex flex-col justify-between py-1">
                           <div className="flex justify-between gap-4">
                             <div>
-                              <Link to={`/product/${item.product.id}`} className="line-clamp-1 font-medium text-[#3f393e] transition-colors hover:text-[#a35d70]">
+                              <Link to={`/product/${item.product.id}`} className="line-clamp-1 font-medium text-[#3f393e] transition-colors hover:text-[#186049]">
                                 {item.product.name}
                               </Link>
                               <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9a9298]">
@@ -143,7 +143,7 @@ const Cart = () => {
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-[#c05f70]">
+                              <div className="font-semibold text-[#186049]">
                                 {formatPrice(item.product.price)}
                               </div>
                             </div>
@@ -169,7 +169,7 @@ const Cart = () => {
                             
                             <button
                               onClick={() => removeItem(item.product.id)}
-                              className="flex h-9 w-9 items-center justify-center text-[#9a9298] transition-colors hover:bg-[#f4dfe3] hover:text-[#c05f70]"
+                              className="flex h-9 w-9 items-center justify-center text-[#9a9298] transition-colors hover:bg-[#e3f0ea] hover:text-[#186049]"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -185,7 +185,7 @@ const Cart = () => {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
                 >
-                  <Link to="/products" className="mt-4 inline-flex items-center text-sm font-medium text-[#777077] transition-colors hover:text-[#a35d70]">
+                  <Link to="/products" className="mt-4 inline-flex items-center text-sm font-medium text-[#777077] transition-colors hover:text-[#186049]">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Continue Shopping
                   </Link>
@@ -206,18 +206,18 @@ const Cart = () => {
                   <div className="mb-6 border-t border-[#e3dadd] pt-4">
                     <div className="mb-3 flex justify-between text-sm">
                       <span className="font-medium text-[#5f595d]">Free Shipping Progress</span>
-                      <span className="font-bold text-[#a35d70]">{Math.round(progressToFreeShipping)}%</span>
+                      <span className="font-bold text-[#186049]">{Math.round(progressToFreeShipping)}%</span>
                     </div>
                     <div className="mb-2 h-1.5 w-full overflow-hidden bg-white">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${progressToFreeShipping}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        className="h-full bg-[#c97685]"
+                        className="h-full bg-[#186049]"
                       />
                     </div>
                     {subtotal >= 1000 ? (
-                      <p className="text-xs text-[#a35d70]">You've unlocked free shipping!</p>
+                      <p className="text-xs text-[#186049]">You've unlocked free shipping!</p>
                     ) : (
                       <p className="text-xs text-[#9a9298]">
                         Add <span className="text-[#3f393e]">Rs. {1000 - subtotal}</span> more for free shipping
@@ -264,7 +264,7 @@ const Cart = () => {
                             onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
                             onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
                             placeholder="Enter code"
-                            className="flex-1 border border-[#d8cfd3] bg-white px-3 py-2 font-mono text-xs uppercase tracking-wider text-[#3f393e] outline-none transition-colors focus:border-[#a35d70]"
+                            className="flex-1 border border-[#d8cfd3] bg-white px-3 py-2 font-mono text-xs uppercase tracking-wider text-[#3f393e] outline-none transition-colors focus:border-[#186049]"
                           />
                           <button
                             onClick={handleApplyCoupon}
@@ -307,7 +307,7 @@ const Cart = () => {
                     <div className="flex justify-between">
                       <span>Shipping</span>
                       <span className="font-medium text-[#3f393e]">
-                        {shipping === 0 ? <span className="text-[#a35d70]">Free</span> : formatPrice(shipping)}
+                        {shipping === 0 ? <span className="text-[#186049]">Free</span> : formatPrice(shipping)}
                       </span>
                     </div>
                     <AnimatePresence>
@@ -328,7 +328,7 @@ const Cart = () => {
                   <div className="mb-8 border-t border-[#e3dadd] pt-6">
                     <div className="flex items-end justify-between">
                       <span className="font-medium text-[#3f393e]">Total</span>
-                      <span className="font-serif text-3xl text-[#c05f70]">
+                      <span className="font-serif text-3xl text-[#186049]">
                         {formatPrice(total)}
                       </span>
                     </div>

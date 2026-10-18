@@ -32,7 +32,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/product/${product.id}`} className="block">
         <div className="relative aspect-[0.9] overflow-hidden bg-[#eee9eb]">
           {badgeLabel && (
-            <span className="absolute left-2 top-2 z-10 bg-[#c97685] px-2 py-1 text-[9px] font-semibold text-white">
+            <span className="absolute left-2 top-2 z-10 bg-[#186049] px-2 py-1 text-[9px] font-semibold text-white">
               {badgeLabel}
             </span>
           )}
@@ -52,7 +52,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               onClick={handleAddToCart}
               disabled={product.stockQuantity === 0}
               aria-label={product.stockQuantity > 0 ? `Add ${product.name} to cart` : `${product.name} is out of stock`}
-              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-[#f5f0f2] text-[#242024] transition-colors hover:bg-[#c97685] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-[#eef6f2] text-[#242024] transition-colors hover:bg-[#186049] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ShoppingBag className="h-4 w-4" />
             </button>

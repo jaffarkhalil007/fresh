@@ -85,18 +85,18 @@ export const CustomerChatWidget = ({ defaultOrderId }: { defaultOrderId?: string
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-[calc(100vw-2rem)] max-w-sm sm:w-96 h-[460px] glass bg-background/95 backdrop-blur-2xl border border-[#c97685]/40 rounded-3xl shadow-2xl flex flex-col overflow-hidden mb-4 border-solid"
+            className="w-[calc(100vw-2rem)] max-w-sm sm:w-96 h-[460px] glass bg-background/95 backdrop-blur-2xl border border-[#186049]/40 rounded-3xl shadow-2xl flex flex-col overflow-hidden mb-4 border-solid"
           >
             {/* Header */}
-            <div className="p-4 border-b border-foreground/10 flex items-center justify-between bg-[#a35d70]/15">
+            <div className="p-4 border-b border-foreground/10 flex items-center justify-between bg-[#186049]/15">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-[#a35d70] text-white flex items-center justify-center font-bold shadow-md">
+                <div className="w-9 h-9 rounded-full bg-[#186049] text-white flex items-center justify-center font-bold shadow-md">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="font-bold text-sm text-foreground">HAMAASH Support</div>
-                  <div className="text-[10px] text-[#a35d70] font-medium flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[#c97685] animate-pulse" /> Store Owner Online
+                  <div className="text-[10px] text-[#186049] font-medium flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-[#186049] animate-pulse" /> Store Owner Online
                   </div>
                 </div>
               </div>
@@ -118,7 +118,7 @@ export const CustomerChatWidget = ({ defaultOrderId }: { defaultOrderId?: string
                   <div
                     className={`max-w-[82%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
                       msg.sender_type === 'customer'
-                        ? 'bg-[#a35d70] text-white font-medium rounded-br-none'
+                        ? 'bg-[#186049] text-white font-medium rounded-br-none'
                         : 'glass bg-foreground/10 text-foreground rounded-bl-none border border-foreground/10'
                     }`}
                   >
@@ -141,12 +141,12 @@ export const CustomerChatWidget = ({ defaultOrderId }: { defaultOrderId?: string
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder={user ? 'Ask owner a question...' : 'Sign in to chat with the owner'}
                 disabled={!user}
-                className="flex-1 bg-slate-950 border border-slate-700 rounded-full h-10 px-4 text-xs text-white font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#a35d70]"
+                className="flex-1 bg-slate-950 border border-slate-700 rounded-full h-10 px-4 text-xs text-white font-medium placeholder:text-slate-400 focus:outline-none focus:border-[#186049]"
               />
               <button
                 onClick={handleSend}
                 disabled={!user || !inputText.trim()}
-                className="w-10 h-10 rounded-full bg-[#a35d70] text-white flex items-center justify-center shadow-md disabled:opacity-40 hover:bg-[#8f4f60] hover:scale-105 transition-all"
+                className="w-10 h-10 rounded-full bg-[#186049] text-white flex items-center justify-center shadow-md disabled:opacity-40 hover:bg-[#0f3d2c] hover:scale-105 transition-all"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -157,10 +157,10 @@ export const CustomerChatWidget = ({ defaultOrderId }: { defaultOrderId?: string
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-14 w-14 rounded-full bg-[#a35d70] text-white flex items-center justify-center shadow-2xl hover:bg-[#8f4f60] hover:scale-110 active:scale-95 transition-all relative border border-[#c97685]/40"
+        className="h-14 w-14 rounded-full bg-[#186049] text-white flex items-center justify-center shadow-2xl hover:bg-[#0f3d2c] hover:scale-110 active:scale-95 transition-all relative border border-[#186049]/40"
       >
         <MessageSquare className="w-6 h-6 text-white" />
-        <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#c97685] rounded-full border-2 border-background animate-pulse" />
+        <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#186049] rounded-full border-2 border-background animate-pulse" />
       </button>
     </div>
   );

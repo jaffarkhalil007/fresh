@@ -114,7 +114,7 @@
   }
 
   .header-icon {
-    @apply flex h-9 w-9 items-center justify-center text-[#4e484d] transition-colors hover:text-[#a35d70];
+    @apply flex h-9 w-9 items-center justify-center text-[#4e484d] transition-colors hover:text-[#186049];
   }
 
   .hero-image-card {

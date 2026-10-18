@@ -103,20 +103,20 @@ const ProductDetail = () => {
         <div className="mx-auto max-w-[1280px] px-4 py-4 md:px-6 md:py-5">
           {/* Breadcrumb */}
           <nav className="mb-4 flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#9a9298]">
-            <Link to="/" className="transition-colors hover:text-[#a35d70]">
+            <Link to="/" className="transition-colors hover:text-[#186049]">
               Home
             </Link>
             <span>/</span>
             <Link
               to="/products"
-              className="transition-colors hover:text-[#a35d70]"
+              className="transition-colors hover:text-[#186049]"
             >
               Shop
             </Link>
             <span>/</span>
             <Link
               to={`/products?category=${product.category}`}
-              className="transition-colors hover:text-[#a35d70]"
+              className="transition-colors hover:text-[#186049]"
             >
               {product.category}
             </Link>
@@ -156,7 +156,7 @@ const ProductDetail = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex flex-col justify-center py-0 lg:py-2"
             >
-              {/* <div className="mb-2 inline-flex self-start bg-[#f4f0ed] px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.16em] text-[#a35d70]">
+              {/* <div className="mb-2 inline-flex self-start bg-[#f4f0ed] px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.16em] text-[#186049]">
                 {product.category}
               </div> */}
 
@@ -187,11 +187,11 @@ const ProductDetail = () => {
 
               <div className="mb-4 flex items-end gap-3">
                 {saleBadge && (
-                  <span className="self-center bg-[#c97685] px-2 py-1 text-[9px] font-semibold text-white">
+                  <span className="self-center bg-[#186049] px-2 py-1 text-[9px] font-semibold text-white">
                     {saleBadge}
                   </span>
                 )}
-                <span className="text-2xl font-semibold text-[#c05f70] md:text-3xl">
+                <span className="text-2xl font-semibold text-[#186049] md:text-3xl">
                   {formatPrice(displayPrice)}
                 </span>
                 {shownOriginal && shownOriginal !== displayPrice && (
@@ -225,7 +225,7 @@ const ProductDetail = () => {
 
                 <div className="flex gap-2">
                   <button
-                    className="flex h-9 w-full items-center justify-center gap-1.5 bg-[#a35d70] text-[9px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-9 w-full items-center justify-center gap-1.5 bg-[#186049] text-[9px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                     onClick={handleBuyNow}
                     disabled={product.stockQuantity === 0}
                   >
@@ -245,7 +245,7 @@ const ProductDetail = () => {
               {/* Badges */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex items-center gap-2 border-t border-[#e8e3e5] pt-2.5">
-                  <Truck className="h-4 w-4 text-[#a35d70]" />
+                  <Truck className="h-4 w-4 text-[#186049]" />
                   <div>
                     <div className="mb-0.5 text-[10px] font-bold text-[#3f393e]">
                       Free Delivery
@@ -256,7 +256,7 @@ const ProductDetail = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 border-t border-[#e8e3e5] pt-2.5">
-                  <ShieldCheck className="h-4 w-4 text-[#a35d70]" />
+                  <ShieldCheck className="h-4 w-4 text-[#186049]" />
                   <div>
                     <div className="mb-0.5 text-[10px] font-bold text-[#3f393e]">
                       Secure Checkout
@@ -276,7 +276,7 @@ const ProductDetail = () => {
               <button
                 className={`relative px-4 pb-2.5 text-xs font-medium transition-colors ${
                   activeTab === "description"
-                    ? "text-[#a35d70]"
+                    ? "text-[#186049]"
                     : "text-[#9a9298] hover:text-[#3f393e]"
                 }`}
                 onClick={() => setActiveTab("description")}
@@ -285,14 +285,14 @@ const ProductDetail = () => {
                 {activeTab === "description" && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c97685]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#186049]"
                   />
                 )}
               </button>
               <button
                 className={`relative px-4 pb-2.5 text-xs font-medium transition-colors ${
                   activeTab === "reviews"
-                    ? "text-[#a35d70]"
+                    ? "text-[#186049]"
                     : "text-[#9a9298] hover:text-[#3f393e]"
                 }`}
                 onClick={() => setActiveTab("reviews")}
@@ -301,7 +301,7 @@ const ProductDetail = () => {
                 {activeTab === "reviews" && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#c97685]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#186049]"
                   />
                 )}
               </button>

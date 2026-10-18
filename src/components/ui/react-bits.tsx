@@ -470,7 +470,7 @@ export const BubbleMenu = ({ items = [] }: any) => {
           href={item.href || '#'}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="glass h-14 w-14 rounded-full shadow-xl flex shrink-0 items-center justify-center border border-[#c97685]/30 text-[#a35d70] bg-background/80 hover:bg-[#a35d70] hover:text-white transition-colors"
+          className="glass h-14 w-14 rounded-full shadow-xl flex shrink-0 items-center justify-center border border-[#186049]/30 text-[#186049] bg-background/80 hover:bg-[#186049] hover:text-white transition-colors"
           title={item.label}
         >
           {item.icon}

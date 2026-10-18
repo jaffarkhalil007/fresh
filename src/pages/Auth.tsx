@@ -9,8 +9,8 @@
 //   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   
 //   return (
-//     <div className="min-h-screen bg-[#fffdfc] relative selection:bg-[#f4dfe3] flex flex-col">
-//       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#f4dfe3_0%,_transparent_42%)] opacity-50 pointer-events-none" />
+//     <div className="min-h-screen bg-[#fffdfc] relative selection:bg-[#e3f0ea] flex flex-col">
+//       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#e3f0ea_0%,_transparent_42%)] opacity-50 pointer-events-none" />
 //       <Header />
 
 //       <main className="flex-1 flex flex-col items-center justify-center px-4 pb-16 pt-28 sm:pt-32 md:pb-20 md:pt-52 relative z-10">
@@ -21,7 +21,7 @@
 //         >
 //           <div className="relative w-full p-1 sm:p-3">
 //             <div className="relative z-10 mb-6 text-center sm:mb-8">
-//               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#a35d70]">Welcome to HAMAASH</p>
+//               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#186049]">Welcome to HAMAASH</p>
 //               <h1 className="font-serif text-3xl text-[#242024] sm:text-4xl">
 //                 {activeTab === 'login' ? 'Sign in to continue' : 'Create your account'}
 //               </h1>
@@ -34,24 +34,24 @@
 //             <div className="relative z-10 mb-6 flex border-b border-[#e8e3e5] sm:mb-8">
 //               <button
 //                 className={`flex-1 pb-4 text-sm font-medium transition-colors relative ${
-//                   activeTab === 'login' ? 'text-[#a35d70]' : 'text-[#9a9298] hover:text-[#242024]'
+//                   activeTab === 'login' ? 'text-[#186049]' : 'text-[#9a9298] hover:text-[#242024]'
 //                 }`}
 //                 onClick={() => setActiveTab('login')}
 //               >
 //                 Sign In
 //                 {activeTab === 'login' && (
-//                   <motion.div layoutId="authTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#a35d70]" />
+//                   <motion.div layoutId="authTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#186049]" />
 //                 )}
 //               </button>
 //               <button
 //                 className={`flex-1 pb-4 text-sm font-medium transition-colors relative ${
-//                   activeTab === 'signup' ? 'text-[#a35d70]' : 'text-[#9a9298] hover:text-[#242024]'
+//                   activeTab === 'signup' ? 'text-[#186049]' : 'text-[#9a9298] hover:text-[#242024]'
 //                 }`}
 //                 onClick={() => setActiveTab('signup')}
 //               >
 //                 Create Account
 //                 {activeTab === 'signup' && (
-//                   <motion.div layoutId="authTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#a35d70]" />
+//                   <motion.div layoutId="authTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#186049]" />
 //                 )}
 //               </button>
 //             </div>
@@ -74,17 +74,17 @@
 //                           card: "w-full rounded-2xl border border-[#e8e3e5] bg-white p-5 shadow-[0_18px_45px_rgba(83,52,62,0.12)] sm:p-7",
 //                           headerTitle: "hidden",
 //                           headerSubtitle: "hidden",
-//                           formButtonPrimary: "w-full h-12 text-base mt-2 normal-case rounded-full bg-[#a35d70] hover:bg-[#8f4f60] text-white shadow-md",
-//                           formFieldInput: "bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#a35d70] focus:ring-1 focus:ring-[#a35d70]/30",
+//                           formButtonPrimary: "w-full h-12 text-base mt-2 normal-case rounded-full bg-[#186049] hover:bg-[#0f3d2c] text-white shadow-md",
+//                           formFieldInput: "bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#186049] focus:ring-1 focus:ring-[#186049]/30",
 //                           formFieldLabel: "text-[10px] uppercase tracking-widest font-bold text-[#716b70] mb-2",
 //                           footerActionText: "text-[#716b70]",
-//                           footerActionLink: "text-[#a35d70] hover:text-[#8f4f60] font-medium",
+//                           footerActionLink: "text-[#186049] hover:text-[#0f3d2c] font-medium",
 //                           dividerLine: "bg-[#e8e3e5]",
 //                           dividerText: "text-[#9a9298] text-[10px] uppercase tracking-widest bg-white",
 //                           socialButtonsBlockButton: "bg-white border-[#d8cfd3] hover:bg-[#f8f1f2] text-[#242024] h-12 rounded-xl",
 //                           socialButtonsBlockButtonText: "font-medium text-sm text-[#4e484d]",
 //                           identityPreviewText: "text-[#242024]",
-//                           identityPreviewEditButtonIcon: "text-[#a35d70]",
+//                           identityPreviewEditButtonIcon: "text-[#186049]",
 //                           formFieldInputShowPasswordButton: "text-[#9a9298] hover:text-[#242024]",
 //                         }
 //                       }}
@@ -106,17 +106,17 @@
 //                           card: "w-full rounded-2xl border border-[#e8e3e5] bg-white p-5 shadow-[0_18px_45px_rgba(83,52,62,0.12)] sm:p-7",
 //                           headerTitle: "hidden",
 //                           headerSubtitle: "hidden",
-//                           formButtonPrimary: "w-full h-12 text-base mt-2 normal-case rounded-full bg-[#a35d70] hover:bg-[#8f4f60] text-white shadow-md",
-//                           formFieldInput: "bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#a35d70] focus:ring-1 focus:ring-[#a35d70]/30",
+//                           formButtonPrimary: "w-full h-12 text-base mt-2 normal-case rounded-full bg-[#186049] hover:bg-[#0f3d2c] text-white shadow-md",
+//                           formFieldInput: "bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#186049] focus:ring-1 focus:ring-[#186049]/30",
 //                           formFieldLabel: "text-[10px] uppercase tracking-widest font-bold text-[#716b70] mb-2",
 //                           footerActionText: "text-[#716b70]",
-//                           footerActionLink: "text-[#a35d70] hover:text-[#8f4f60] font-medium",
+//                           footerActionLink: "text-[#186049] hover:text-[#0f3d2c] font-medium",
 //                           dividerLine: "bg-[#e8e3e5]",
 //                           dividerText: "text-[#9a9298] text-[10px] uppercase tracking-widest bg-white",
 //                           socialButtonsBlockButton: "bg-white border-[#d8cfd3] hover:bg-[#f8f1f2] text-[#242024] h-12 rounded-xl",
 //                           socialButtonsBlockButtonText: "font-medium text-sm text-[#4e484d]",
 //                           identityPreviewText: "text-[#242024]",
-//                           identityPreviewEditButtonIcon: "text-[#a35d70]",
+//                           identityPreviewEditButtonIcon: "text-[#186049]",
 //                           formFieldInputShowPasswordButton: "text-[#9a9298] hover:text-[#242024]",
 //                         }
 //                       }}
@@ -147,9 +147,9 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
   return (
-    <div className="min-h-screen bg-[#fffdfc] relative selection:bg-[#f4dfe3] flex flex-col">
+    <div className="min-h-screen bg-[#fffdfc] relative selection:bg-[#e3f0ea] flex flex-col">
       {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#f4dfe3_0%,_transparent_42%)] opacity-50 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_#e3f0ea_0%,_transparent_42%)] opacity-50 pointer-events-none" />
 
       <Header />
 
@@ -185,7 +185,7 @@ const Auth = () => {
               <button
                 className={`relative flex-1 pb-4 text-sm font-medium transition-colors ${
                   activeTab === 'login'
-                    ? 'text-[#a35d70]'
+                    ? 'text-[#186049]'
                     : 'text-[#9a9298] hover:text-[#242024]'
                 }`}
                 onClick={() => setActiveTab('login')}
@@ -195,7 +195,7 @@ const Auth = () => {
                 {activeTab === 'login' && (
                   <motion.div
                     layoutId="authTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#a35d70]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#186049]"
                   />
                 )}
               </button>
@@ -204,7 +204,7 @@ const Auth = () => {
               <button
                 className={`relative flex-1 pb-4 text-sm font-medium transition-colors ${
                   activeTab === 'signup'
-                    ? 'text-[#a35d70]'
+                    ? 'text-[#186049]'
                     : 'text-[#9a9298] hover:text-[#242024]'
                 }`}
                 onClick={() => setActiveTab('signup')}
@@ -214,7 +214,7 @@ const Auth = () => {
                 {activeTab === 'signup' && (
                   <motion.div
                     layoutId="authTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#a35d70]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#186049]"
                   />
                 )}
               </button>
@@ -245,10 +245,10 @@ const Auth = () => {
                           headerSubtitle: 'hidden',
 
                           formButtonPrimary:
-                            'w-full h-12 text-base mt-2 normal-case rounded-full bg-[#a35d70] hover:bg-[#8f4f60] text-white shadow-md',
+                            'w-full h-12 text-base mt-2 normal-case rounded-full bg-[#186049] hover:bg-[#0f3d2c] text-white shadow-md',
 
                           formFieldInput:
-                            'bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#a35d70] focus:ring-1 focus:ring-[#a35d70]/30',
+                            'bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#186049] focus:ring-1 focus:ring-[#186049]/30',
 
                           formFieldLabel:
                             'text-[10px] uppercase tracking-widest font-bold text-[#716b70] mb-2',
@@ -257,7 +257,7 @@ const Auth = () => {
                             'text-[#716b70]',
 
                           footerActionLink:
-                            'text-[#a35d70] hover:text-[#8f4f60] font-medium',
+                            'text-[#186049] hover:text-[#0f3d2c] font-medium',
 
                           dividerLine:
                             'bg-[#e8e3e5]',
@@ -275,7 +275,7 @@ const Auth = () => {
                             'text-[#242024]',
 
                           identityPreviewEditButtonIcon:
-                            'text-[#a35d70]',
+                            'text-[#186049]',
 
                           formFieldInputShowPasswordButton:
                             'text-[#9a9298] hover:text-[#242024]',
@@ -305,10 +305,10 @@ const Auth = () => {
                           headerSubtitle: 'hidden',
 
                           formButtonPrimary:
-                            'w-full h-12 text-base mt-2 normal-case rounded-full bg-[#a35d70] hover:bg-[#8f4f60] text-white shadow-md',
+                            'w-full h-12 text-base mt-2 normal-case rounded-full bg-[#186049] hover:bg-[#0f3d2c] text-white shadow-md',
 
                           formFieldInput:
-                            'bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#a35d70] focus:ring-1 focus:ring-[#a35d70]/30',
+                            'bg-[#fffdfc] border-[#d8cfd3] rounded-xl h-12 px-4 text-[#242024] focus:border-[#186049] focus:ring-1 focus:ring-[#186049]/30',
 
                           formFieldLabel:
                             'text-[10px] uppercase tracking-widest font-bold text-[#716b70] mb-2',
@@ -317,7 +317,7 @@ const Auth = () => {
                             'text-[#716b70]',
 
                           footerActionLink:
-                            'text-[#a35d70] hover:text-[#8f4f60] font-medium',
+                            'text-[#186049] hover:text-[#0f3d2c] font-medium',
 
                           dividerLine:
                             'bg-[#e8e3e5]',
@@ -335,7 +335,7 @@ const Auth = () => {
                             'text-[#242024]',
 
                           identityPreviewEditButtonIcon:
-                            'text-[#a35d70]',
+                            'text-[#186049]',
 
                           formFieldInputShowPasswordButton:
                             'text-[#9a9298] hover:text-[#242024]',

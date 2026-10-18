@@ -30,13 +30,13 @@ const MobileBottomNav = () => {
               key={item.label}
               to={item.path}
               className={`flex h-full w-16 flex-col items-center justify-center gap-1 transition-colors relative ${
-                active ? 'text-[#a35d70]' : 'text-[#8f878d] hover:text-[#4e484d]'
+                active ? 'text-[#186049]' : 'text-[#8f878d] hover:text-[#4e484d]'
               }`}
             >
               <div className="relative">
-                <item.icon className={`h-5 w-5 ${active ? 'fill-[#a35d70]/20' : ''}`} />
+                <item.icon className={`h-5 w-5 ${active ? 'fill-[#186049]/20' : ''}`} />
                 {item.showBadge && cartItemsCount > 0 && (
-                  <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#c97685] text-[9px] font-bold text-white">
+                  <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#186049] text-[9px] font-bold text-white">
                     {cartItemsCount}
                   </span>
                 )}

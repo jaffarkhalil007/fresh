@@ -82,7 +82,7 @@ const Header = () => {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#c97685] text-[9px] font-bold text-white"
+                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#186049] text-[9px] font-bold text-white"
                     >
                       {cartItemsCount}
                     </motion.span>
@@ -105,7 +105,7 @@ const Header = () => {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#c97685] text-[9px] font-bold text-white"
+                      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#186049] text-[9px] font-bold text-white"
                     >
                       {cartItemsCount}
                     </motion.span>
@@ -116,9 +116,9 @@ const Header = () => {
           </div>
           <nav className="mx-auto mt-2 hidden max-w-[1440px] items-center justify-center gap-8 border-t border-[#eee9eb] pt-2 md:flex">
             {[{ label: 'New In', path: '/products' }, ...categories.slice(0, 7).map((category) => ({ label: category.name.split(' ')[0], path: `/products?category=${category.id}` }))].map((item) => (
-              <Link key={item.label} to={item.path} className="text-[11px] uppercase tracking-[0.12em] text-[#5f595d] transition-colors hover:text-[#a35d70]">{item.label}</Link>
+              <Link key={item.label} to={item.path} className="text-[11px] uppercase tracking-[0.12em] text-[#5f595d] transition-colors hover:text-[#186049]">{item.label}</Link>
             ))}
-            <Link to="/products?filter=promotional" className="text-[11px] uppercase tracking-[0.12em] text-[#a35d70]">Sale</Link>
+            <Link to="/products?filter=promotional" className="text-[11px] uppercase tracking-[0.12em] text-[#186049]">Sale</Link>
           </nav>
         </header>
       </div>
@@ -169,9 +169,9 @@ const Header = () => {
                     <Link
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-4 border-b border-[#eee9eb] py-4 transition-colors hover:text-[#a35d70]"
+                      className="flex items-center gap-4 border-b border-[#eee9eb] py-4 transition-colors hover:text-[#186049]"
                     >
-                      <item.icon className="h-5 w-5 text-[#a35d70]" />
+                      <item.icon className="h-5 w-5 text-[#186049]" />
                       <span className="font-medium">{item.label}</span>
                     </Link>
                   </motion.div>

@@ -26,7 +26,7 @@ const CategorySection = ({ products }: CategorySectionProps) => {
       <div className="mx-auto max-w-[1440px] px-2 md:px-4">
         <div className="mt-2 flex items-end justify-between gap-4">
           <h2 className="font-serif text-3xl text-[#242024] md:text-4xl">
-            Find your <em className="text-[#a35d70]">everyday</em>
+            Find your <em className="text-[#186049]">everyday</em>
           </h2>
           <Link
             to="/products"

@@ -6,10 +6,12 @@ import CategorySection from '@/components/home/CategorySection';
 import ProductSection from '@/components/home/ProductSection';
 import PromoBanner from '@/components/home/PromoBanner';
 import { useProducts } from '@/hooks/useProducts';
+import { useBanners } from '@/hooks/useBanners';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const { data: products = [], isLoading } = useProducts();
+  const { data: banners = [] } = useBanners();
 
   const topSelling = products.filter((product) => product.isTopSelling);
   const exclusive = products.filter((product) => product.isExclusive);
@@ -37,7 +39,7 @@ const Index = () => {
       <Header />
       
       <main className="flex-1">
-        <HeroSection products={products} />
+        <HeroSection products={products} banners={banners} />
 
         <CategorySection products={products} />
         

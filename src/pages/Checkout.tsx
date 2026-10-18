@@ -166,7 +166,7 @@ const Checkout = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!', { className: '!bg-[#fffdfc] !border-[#c97685] !text-[#3f393e]' });
+    toast.success('Copied to clipboard!', { className: '!bg-[#fffdfc] !border-[#186049] !text-[#3f393e]' });
   };
 
   const placeOrder = async () => {
@@ -284,7 +284,7 @@ const Checkout = () => {
       } else {
         clearCart();
       }
-      toast.success('Order placed successfully!', { className: '!bg-[#fffdfc] !border-[#c97685] !text-[#3f393e]' });
+      toast.success('Order placed successfully!', { className: '!bg-[#fffdfc] !border-[#186049] !text-[#3f393e]' });
       navigate(`/orders/${order.id}`, { replace: true });
     } catch (error: any) {
       console.error('Order placement error:', error);
@@ -303,7 +303,7 @@ const Checkout = () => {
             HAMAASH
           </Link>
           <div className="flex items-center gap-2 text-sm font-medium text-[#777077]">
-            <ShieldCheck className="h-4 w-4 text-[#a35d70]" />
+            <ShieldCheck className="h-4 w-4 text-[#186049]" />
             Secure Checkout
           </div>
         </div>
@@ -315,14 +315,14 @@ const Checkout = () => {
           <div className="mx-auto mb-12 max-w-2xl">
             <div className="relative flex items-center justify-between">
               <div className="absolute left-0 top-1/2 z-0 h-px w-full -translate-y-1/2 bg-[#e8e3e5]" />
-              <div className="absolute left-0 top-1/2 z-0 h-0.5 -translate-y-1/2 bg-[#c97685] transition-all duration-500" style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }} />
+              <div className="absolute left-0 top-1/2 z-0 h-0.5 -translate-y-1/2 bg-[#186049] transition-all duration-500" style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }} />
               
               {steps.map((step) => (
                 <div key={step.id} className="relative z-10 flex flex-col items-center gap-2 bg-[#fffdfc] px-2">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-500 ${currentStep >= step.id ? 'border-[#c97685] bg-[#c97685] text-white' : 'border-[#d8cfd3] bg-white text-[#9a9298]'}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-500 ${currentStep >= step.id ? 'border-[#186049] bg-[#186049] text-white' : 'border-[#d8cfd3] bg-white text-[#9a9298]'}`}>
                     {currentStep > step.id ? <Check className="h-5 w-5" /> : <span className="font-bold text-sm">{step.id}</span>}
                   </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-widest ${currentStep >= step.id ? 'text-[#a35d70]' : 'text-[#9a9298]'}`}>{step.name}</span>
+                  <span className={`text-[10px] font-bold uppercase tracking-widest ${currentStep >= step.id ? 'text-[#186049]' : 'text-[#9a9298]'}`}>{step.name}</span>
                 </div>
               ))}
             </div>
@@ -345,31 +345,31 @@ const Checkout = () => {
                       <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">First Name *</label>
-                          <input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#c97685]" />
+                          <input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#186049]" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">Last Name *</label>
-                          <input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#c97685]" />
+                          <input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#186049]" />
                         </div>
                         <div className="space-y-2 md:col-span-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">Email Address *</label>
-                          <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#c97685]" />
+                          <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#186049]" />
                         </div>
                         <div className="space-y-2 md:col-span-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">Phone Number *</label>
-                          <input name="phone" value={formData.phone} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#c97685]" />
+                          <input name="phone" value={formData.phone} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#186049]" />
                         </div>
                         <div className="space-y-2 md:col-span-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">Street Address *</label>
-                          <input name="address" value={formData.address} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#c97685]" />
+                          <input name="address" value={formData.address} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#186049]" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">City *</label>
-                          <input name="city" value={formData.city} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#c97685]" />
+                          <input name="city" value={formData.city} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#186049]" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">Zip Code</label>
-                          <input name="zipCode" value={formData.zipCode} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#c97685]" />
+                          <input name="zipCode" value={formData.zipCode} onChange={handleInputChange} className="h-12 w-full border border-[#d8cfd3] bg-[#fffdfc] px-4 text-[#3f393e] outline-none transition-colors focus:border-[#186049]" />
                         </div>
                       </div>
                     </div>
@@ -395,11 +395,11 @@ const Checkout = () => {
                           <div 
                             key={method.id}
                             onClick={() => setPaymentMethod(method.id as any)}
-                            className={`cursor-pointer border p-4 transition-all ${paymentMethod === method.id ? 'border-[#c97685] bg-[#f4dfe3]' : 'border-[#e8e3e5] hover:border-[#d8cfd3] hover:bg-[#fffdfc]'}`}
+                            className={`cursor-pointer border p-4 transition-all ${paymentMethod === method.id ? 'border-[#186049] bg-[#e3f0ea]' : 'border-[#e8e3e5] hover:border-[#d8cfd3] hover:bg-[#fffdfc]'}`}
                           >
                             <div className="flex items-center gap-4">
-                              <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === method.id ? 'border-[#c97685]' : 'border-[#d8cfd3]'}`}>
-                                {paymentMethod === method.id && <div className="h-2.5 w-2.5 rounded-full bg-[#c97685]" />}
+                              <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${paymentMethod === method.id ? 'border-[#186049]' : 'border-[#d8cfd3]'}`}>
+                                {paymentMethod === method.id && <div className="h-2.5 w-2.5 rounded-full bg-[#186049]" />}
                               </div>
                               <div>
                                 <div className="text-sm font-bold text-[#3f393e]">{method.name}</div>
@@ -419,7 +419,7 @@ const Checkout = () => {
                             className="overflow-hidden"
                           >
                             <div className="relative mb-6 border-t border-[#e8e3e5] bg-[#f4f0ed] p-6">
-                              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#a35d70]">Transfer Details</h3>
+                              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#186049]">Transfer Details</h3>
                               
                               <div className="space-y-4 mb-6">
                                 {paymentMethod === 'jazzcash' && (
@@ -431,7 +431,7 @@ const Checkout = () => {
                                     <div className="flex justify-between items-center text-sm">
                                       <span className="text-[#9a9298]">JazzCash Number:</span>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-[#a35d70]">{JAZZCASH_ACCOUNT.number}</span>
+                                        <span className="text-lg font-bold text-[#186049]">{JAZZCASH_ACCOUNT.number}</span>
                                         <button onClick={() => copyToClipboard(JAZZCASH_ACCOUNT.number)} className="rounded p-1 hover:bg-[#eee9eb]"><Copy className="h-4 w-4 text-[#9a9298]" /></button>
                                       </div>
                                     </div>
@@ -446,7 +446,7 @@ const Checkout = () => {
                                     <div className="flex justify-between items-center text-sm">
                                       <span className="text-[#9a9298]">EasyPaisa Number:</span>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-[#a35d70]">{EASYPAISA_ACCOUNT.number}</span>
+                                        <span className="text-lg font-bold text-[#186049]">{EASYPAISA_ACCOUNT.number}</span>
                                         <button onClick={() => copyToClipboard(EASYPAISA_ACCOUNT.number)} className="rounded p-1 hover:bg-[#eee9eb]"><Copy className="h-4 w-4 text-[#9a9298]" /></button>
                                       </div>
                                     </div>
@@ -461,7 +461,7 @@ const Checkout = () => {
                                     <div className="flex justify-between items-center text-sm">
                                       <span className="text-[#9a9298]">SadaPay IBAN / Phone:</span>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-[#a35d70]">{SADAPAY_ACCOUNT.number}</span>
+                                        <span className="text-lg font-bold text-[#186049]">{SADAPAY_ACCOUNT.number}</span>
                                         <button onClick={() => copyToClipboard(SADAPAY_ACCOUNT.number)} className="rounded p-1 hover:bg-[#eee9eb]"><Copy className="h-4 w-4 text-[#9a9298]" /></button>
                                       </div>
                                     </div>
@@ -472,7 +472,7 @@ const Checkout = () => {
                               <div className="space-y-4">
                                 <div className="space-y-2">
                                   <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">Transaction ID (TID)</label>
-                                  <input value={tid} onChange={(e) => setTid(e.target.value)} placeholder="e.g. 0123456789" className="h-12 w-full border border-[#d8cfd3] bg-white px-4 text-[#3f393e] outline-none focus:border-[#c97685]" />
+                                  <input value={tid} onChange={(e) => setTid(e.target.value)} placeholder="e.g. 0123456789" className="h-12 w-full border border-[#d8cfd3] bg-white px-4 text-[#3f393e] outline-none focus:border-[#186049]" />
                                 </div>
 
                                 <div className="space-y-2">
@@ -480,19 +480,19 @@ const Checkout = () => {
                                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                                   <div 
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-[#d8cfd3] p-4 text-center transition-all hover:border-[#c97685] hover:bg-white"
+                                    className="flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-[#d8cfd3] p-4 text-center transition-all hover:border-[#186049] hover:bg-white"
                                   >
                                     {previewUrl ? (
                                       <div className="flex items-center gap-3">
-                                        <img src={previewUrl} alt="Screenshot proof" className="h-16 w-16 rounded-lg border border-[#c97685] object-cover" />
+                                        <img src={previewUrl} alt="Screenshot proof" className="h-16 w-16 rounded-lg border border-[#186049] object-cover" />
                                         <div className="text-left">
-                                          <div className="text-xs font-bold text-[#a35d70]">Screenshot Uploaded</div>
+                                          <div className="text-xs font-bold text-[#186049]">Screenshot Uploaded</div>
                                           <div className="text-[10px] text-[#9a9298]">Click to replace</div>
                                         </div>
                                       </div>
                                     ) : (
                                       <>
-                                        <Upload className="h-6 w-6 text-[#a35d70]" />
+                                        <Upload className="h-6 w-6 text-[#186049]" />
                                         <div className="text-xs font-medium text-[#5f595d]">Click to select screenshot image</div>
                                         <div className="text-[10px] text-[#9a9298]">PNG, JPG up to 5MB</div>
                                       </>
@@ -519,7 +519,7 @@ const Checkout = () => {
                       <h2 className="mb-8 font-serif text-3xl text-[#242024]">Review Order</h2>
                       <div className="space-y-8">
                         <div>
-                          <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#a35d70]">Shipping Details</h3>
+                          <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#186049]">Shipping Details</h3>
                           <div className="border-t border-[#e8e3e5] bg-[#f4f0ed] p-4 text-sm leading-relaxed text-[#777077]">
                             <span className="font-medium text-[#3f393e]">{formData.firstName} {formData.lastName}</span><br />
                             {formData.address}, {formData.city} {formData.zipCode}<br />
@@ -529,20 +529,20 @@ const Checkout = () => {
                         </div>
 
                         <div>
-                          <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#a35d70]">Payment Method</h3>
+                          <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#186049]">Payment Method</h3>
                           <div className="border-t border-[#e8e3e5] bg-[#f4f0ed] p-4 text-sm text-[#777077]">
                             <span className="font-medium uppercase text-[#3f393e]">{paymentMethod}</span>
                             {paymentMethod !== 'cod' && (
                               <div className="mt-1 flex flex-col gap-1">
-                                {tid && <div>TID: <span className="font-mono text-[#a35d70]">{tid}</span></div>}
-                                {paymentScreenshot && <div className="flex items-center gap-1 text-xs text-[#a35d70]"><ImageIcon className="h-3 w-3" /> Screenshot proof attached</div>}
+                                {tid && <div>TID: <span className="font-mono text-[#186049]">{tid}</span></div>}
+                                {paymentScreenshot && <div className="flex items-center gap-1 text-xs text-[#186049]"><ImageIcon className="h-3 w-3" /> Screenshot proof attached</div>}
                               </div>
                             )}
                           </div>
                         </div>
 
                         <div>
-                          <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#a35d70]">Items ({checkoutItems.length})</h3>
+                          <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#186049]">Items ({checkoutItems.length})</h3>
                           <div className="space-y-3">
                             {checkoutItems.map((item) => (
                               <div key={item.product.id} className="flex items-center gap-4 border-t border-[#e8e3e5] py-3">
@@ -553,7 +553,7 @@ const Checkout = () => {
                                   <div className="line-clamp-1 text-sm font-medium text-[#3f393e]">{item.product.name}</div>
                                   <div className="text-xs text-[#9a9298]">Qty: {item.quantity} × {formatPrice(item.product.price)}</div>
                                 </div>
-                                <div className="text-sm font-bold text-[#c05f70]">
+                                <div className="text-sm font-bold text-[#186049]">
                                   {formatPrice(item.product.price * item.quantity)}
                                 </div>
                               </div>
@@ -579,7 +579,7 @@ const Checkout = () => {
                   <div className="flex justify-between">
                     <span>Shipping</span>
                     <span className="font-medium text-[#3f393e]">
-                      {shipping === 0 ? <span className="text-[#a35d70]">Free</span> : formatPrice(shipping)}
+                      {shipping === 0 ? <span className="text-[#186049]">Free</span> : formatPrice(shipping)}
                     </span>
                   </div>
                   {appliedCoupon && couponDiscount > 0 && (
@@ -617,7 +617,7 @@ const Checkout = () => {
                           onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
                           onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
                           placeholder="Enter code"
-                          className="flex-1 border border-[#d8cfd3] bg-white px-3 py-2 font-mono text-xs uppercase tracking-wider text-[#3f393e] outline-none transition-colors focus:border-[#a35d70]"
+                          className="flex-1 border border-[#d8cfd3] bg-white px-3 py-2 font-mono text-xs uppercase tracking-wider text-[#3f393e] outline-none transition-colors focus:border-[#186049]"
                         />
                         <button
                           onClick={handleApplyCoupon}
@@ -643,7 +643,7 @@ const Checkout = () => {
                 <div className="mb-8 border-t border-[#e3dadd] pt-6">
                   <div className="flex items-end justify-between">
                     <span className="font-medium text-[#3f393e]">Total</span>
-                    <span className="font-serif text-3xl text-[#c05f70]">
+                    <span className="font-serif text-3xl text-[#186049]">
                       {formatPrice(total)}
                     </span>
                   </div>
