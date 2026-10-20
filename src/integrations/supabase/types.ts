@@ -207,6 +207,7 @@ export type Database = {
           discount_percentage: number | null
           id: string
           image_url: string | null
+          image_urls: string[]
           is_active: boolean | null
           is_exclusive: boolean | null
           is_promotional: boolean | null
@@ -227,6 +228,7 @@ export type Database = {
           discount_percentage?: number | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_active?: boolean | null
           is_exclusive?: boolean | null
           is_promotional?: boolean | null
@@ -247,6 +249,7 @@ export type Database = {
           discount_percentage?: number | null
           id?: string
           image_url?: string | null
+          image_urls?: string[]
           is_active?: boolean | null
           is_exclusive?: boolean | null
           is_promotional?: boolean | null

@@ -42,6 +42,7 @@ const formatProduct = (
     deliveryFee: data.delivery_fee || 0,
     category: data.category,
     imageUrl: data.image_url || '/placeholder.svg',
+    images: data.image_urls?.length ? data.image_urls : data.image_url ? [data.image_url] : [],
     stockQuantity: data.stock_quantity || 0,
     isTopSelling: data.is_top_selling,
     isExclusive: data.is_exclusive,

@@ -30,6 +30,8 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { data: product, isLoading: productLoading } = useProduct(id);
   const { data: products = [], isLoading: productsLoading } = useProducts();
+  const [activeImage, setActiveImage] = useState(0);
+  const galleryImages = product?.images?.length ? product.images : [product?.imageUrl ?? ''];
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
 
@@ -133,7 +135,7 @@ const ProductDetail = () => {
               <div className="group relative flex aspect-[1.3] items-center justify-center overflow-hidden bg-[#fffdfc] p-0">
                 {" "}
                 <img
-                  src={optimizeImageUrl(product.imageUrl, 600, 65)}
+                  src={optimizeImageUrl(galleryImages[activeImage] ?? product.imageUrl, 600, 65)}
                   alt={product.name}
                   loading="lazy"
                   decoding="async"
@@ -148,6 +150,21 @@ const ProductDetail = () => {
                   )}
                 </div>
               </div>
+              {galleryImages.length > 1 && (
+                <div className="mt-3 flex gap-2 overflow-x-auto">
+                  {galleryImages.map((url, index) => (
+                    <button
+                      key={`${url}-${index}`}
+                      type="button"
+                      onClick={() => setActiveImage(index)}
+                      aria-label={`Show image ${index + 1}`}
+                      className={`h-16 w-16 shrink-0 overflow-hidden border bg-[#fffdfc] p-1 transition-colors ${index === activeImage ? 'border-[#186049]' : 'border-[#e8e3e5] hover:border-[#186049]/50'}`}
+                    >
+                      <img src={optimizeImageUrl(url, 160, 60)} alt="" loading="lazy" className="h-full w-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </motion.div>
             {/* Product Details */}
             <motion.div

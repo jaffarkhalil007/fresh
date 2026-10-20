@@ -15,18 +15,18 @@ const steps = [
 ];
 
 const JAZZCASH_ACCOUNT = {
-  number: '03705715285',
-  name: 'Muhammad Saad',
+  number: '03047683722',
+  name: 'Muhammad Jaffar',
 };
 
 const EASYPAISA_ACCOUNT = {
-  number: '03429302636',
-  name: 'Muhammad Saad',
+  number: '03047683722',
+  name: 'Muhammad Jaffar',
 };
 
 const SADAPAY_ACCOUNT = {
-  number: '03705715285',
-  name: 'Muhammad Saad',
+  number: '03047683722',
+  name: 'Muhammad Jaffar',
 };
 
 const isUuid = (value: string) =>

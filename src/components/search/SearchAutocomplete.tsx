@@ -9,9 +9,10 @@ import { useProducts } from '@/hooks/useProducts';
 interface SearchAutocompleteProps {
   className?: string;
   onClose?: () => void;
+  showClearButton?: boolean;
 }
 
-const SearchAutocomplete = ({ className, onClose }: SearchAutocompleteProps) => {
+const SearchAutocomplete = ({ className, onClose, showClearButton = true }: SearchAutocompleteProps) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -80,7 +81,7 @@ const SearchAutocomplete = ({ className, onClose }: SearchAutocompleteProps) => 
           onFocus={() => setIsOpen(filteredProducts.length > 0)}
           className="pl-10 pr-10 h-10 w-full bg-muted border border-hairline focus-visible:ring-[#186049] focus-visible:border-[#186049] rounded-pill text-ink placeholder:text-ink-muted"
         />
-        {query && (
+        {query && showClearButton && (
           <Button
             variant="ghost"
             size="icon"

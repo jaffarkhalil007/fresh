@@ -21,6 +21,9 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
+import About from "./pages/About";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 // @ts-ignore
 import { PrismBackground } from "@/components/ui/react-bits";
@@ -68,6 +71,9 @@ const App = () => (
               <Route path="/orders/:orderId" element={<OrderDetails />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/account/*" element={<Account />} />
               <Route path="/login" element={<Navigate to="/auth" replace />} />

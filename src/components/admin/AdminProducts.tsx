@@ -46,6 +46,7 @@ interface Product {
   delivery_fee: number | null;
   category: string;
   image_url: string | null;
+  image_urls: string[] | null;
   stock_quantity: number;
   unit: string | null;
   is_top_selling: boolean | null;
@@ -60,7 +61,7 @@ const initialFormData = {
   price: '',
   original_price: '',
   discount_percentage: '',  delivery_fee: '',  category: '',
-  image_url: '',
+  image_urls: [] as string[],
   stock_quantity: '',
   unit: '1 piece',
   is_top_selling: false,
@@ -105,27 +106,32 @@ const AdminProducts = () => {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (files.length === 0) return;
 
     try {
       setIsUploadingImage(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const uploadedUrls: string[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${Math.random()}-${Date.now()}.${fileExt}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, file);
 
-      const { data } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
+        if (uploadError) throw uploadError;
 
-      setFormData({ ...formData, image_url: data.publicUrl });
-      toast.success('Image uploaded successfully');
+        const { data } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      setFormData((prev) => ({ ...prev, image_urls: [...prev.image_urls, ...uploadedUrls] }));
+      toast.success(`${uploadedUrls.length} image${uploadedUrls.length > 1 ? 's' : ''} uploaded`);
     } catch (error: any) {
       console.error('Upload Error:', error);
       toast.error('Failed to upload image. Make sure the "product-images" bucket exists and has correct permissions.');
@@ -156,7 +162,11 @@ const AdminProducts = () => {
 
       const { error: updateError } = await supabase
         .from('products')
-        .update({ image_url: data.publicUrl })
+        .update({
+          image_url: data.publicUrl,
+          // Quick upload replaces the main picture and keeps the other pictures.
+          image_urls: [data.publicUrl, ...(products.find((p) => p.id === quickUploadProductId)?.image_urls ?? []).slice(1)],
+        })
         .eq('id', quickUploadProductId);
 
       if (updateError) throw updateError;
@@ -261,7 +271,7 @@ const AdminProducts = () => {
         discount_percentage: product.discount_percentage?.toString() || '',
           delivery_fee: product.delivery_fee?.toString() || '',
         category: product.category,
-        image_url: product.image_url || '',
+        image_urls: product.image_urls?.length ? product.image_urls : product.image_url ? [product.image_url] : [],
         stock_quantity: product.stock_quantity.toString(),
         unit: product.unit || '1 piece',
         is_top_selling: product.is_top_selling || false,
@@ -286,7 +296,9 @@ const AdminProducts = () => {
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
           delivery_fee: formData.delivery_fee ? parseInt(formData.delivery_fee) : null,
         category: formData.category,
-        image_url: formData.image_url || null,
+        // The first picture is the main one shown on cards and in the cart.
+        image_url: formData.image_urls[0] || null,
+        image_urls: formData.image_urls,
         stock_quantity: parseInt(formData.stock_quantity),
         unit: formData.unit,
         is_top_selling: formData.is_top_selling,
@@ -536,14 +548,33 @@ const AdminProducts = () => {
                       <Input
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleImageUpload}
                         className="h-11 rounded-xl border-[#d8cfd3] bg-white text-[#716b70] file:mr-3 file:rounded-lg file:border-0 file:bg-[#f4dfe3] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[#8f4f60]"
                         disabled={isUploadingImage}
                       />
                       {isUploadingImage && <Loader2 className="mt-2 h-6 w-6 animate-spin text-[#a35d70]" />}
                     </div>
-                    {formData.image_url && (
-                       <img src={formData.image_url} alt="Preview" className="mt-2 h-20 w-20 rounded-xl border border-[#e8e3e5] object-cover shadow-sm" />
+                    <p className="text-[10px] text-[#9a9298]">Select one or more pictures. The first one is the main picture.</p>
+                    {formData.image_urls.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-3">
+                        {formData.image_urls.map((url, index) => (
+                          <div key={url} className="relative">
+                            <img src={url} alt={`Product image ${index + 1}`} className="h-20 w-20 rounded-xl border border-[#e8e3e5] object-cover shadow-sm" />
+                            {index === 0 && (
+                              <span className="absolute left-1 top-1 bg-[#a35d70] px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wide text-white">Main</span>
+                            )}
+                            <button
+                              type="button"
+                              aria-label="Remove image"
+                              onClick={() => setFormData({ ...formData, image_urls: formData.image_urls.filter((_, i) => i !== index) })}
+                              className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#242024] text-[11px] leading-none text-white"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

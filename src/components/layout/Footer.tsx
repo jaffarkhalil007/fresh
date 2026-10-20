@@ -62,14 +62,7 @@ const Footer = () => {
                   Returns & refunds
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="hover:text-[#186049] transition-colors"
-                >
-                  Delivery information
-                </Link>
-              </li>
+              
             </ul>
           </div>
 
@@ -79,25 +72,18 @@ const Footer = () => {
             </h4>
             <ul className="space-y-3 text-sm text-[#777077]">
               <li>
-                <Link to="/" className="hover:text-[#186049] transition-colors">
+                <Link to="/about" className="hover:text-[#186049] transition-colors">
                   Our story
                 </Link>
               </li>
+             
               <li>
-                <Link
-                  to="/contact"
-                  className="hover:text-[#186049] transition-colors"
-                >
-                  Careers
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="hover:text-[#186049] transition-colors">
+                <Link to="/about" className="hover:text-[#186049] transition-colors">
                   Our impact
                 </Link>
               </li>
               <li>
-                <Link to="/" className="hover:text-[#186049] transition-colors">
+                <Link to="/about" className="hover:text-[#186049] transition-colors">
                   The journal
                 </Link>
               </li>
@@ -146,12 +132,7 @@ const Footer = () => {
             >
               Terms
             </Link>
-            <a
-              href="#cookies"
-              className="hover:text-[#242024] transition-colors"
-            >
-              Cookie settings
-            </a>
+           
           </div>
         </div>
       </div>

@@ -188,7 +188,7 @@ const Products = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 bg-[#fffdfc] px-4 pb-24 pt-[50px] md:px-8 md:pb-20 md:pt-24 lg:pt-36">
+      <main className="flex-1 bg-[#fffdfc] px-4 pb-24 pt-[66px] md:px-8 md:pb-20 md:pt-24 lg:pt-36">
         <div className="mx-auto max-w-[1440px]">
         {/* <section className="mb-8 border-b border-[#e8e3e5] pb-8 md:mb-10 md:pb-10">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#186049]">The HAMAASH shop</p>

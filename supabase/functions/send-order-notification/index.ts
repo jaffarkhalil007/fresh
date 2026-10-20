@@ -55,7 +55,7 @@ serve(async (req) => {
     let subject = '';
     let html = '';
     
-    const storeName = "SnapCart";
+    const storeName = Deno.env.get("STORE_NAME") || "Hamaash";
     const orderRef = order.id.slice(0, 8);
     
     const toEmails = [];
@@ -163,7 +163,7 @@ serve(async (req) => {
 
     // Send using Resend
     const payload = {
-      from: senderEmail === 'onboarding@resend.dev' ? 'onboarding@resend.dev' : `SnapCart Updates <${senderEmail}>`,
+      from: senderEmail === 'onboarding@resend.dev' ? 'onboarding@resend.dev' : `${storeName} <${senderEmail}>`,
       to: toEmails,
       subject,
       html,

@@ -11,6 +11,7 @@ export interface Product {
   deliveryFee?: number;
   category: string;
   imageUrl: string;
+  images?: string[];
   stockQuantity: number;
   isTopSelling?: boolean;
   isExclusive?: boolean;

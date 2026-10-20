@@ -15,7 +15,7 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
-    { icon: Search, label: 'Shop', path: '/products' },
+    { icon: Search, label: 'Products', path: '/products' },
     { icon: ShoppingBag, label: 'Cart', path: '/cart', showBadge: true },
     { icon: User, label: 'Account', path: user ? '/account' : '/auth' },
   ];
