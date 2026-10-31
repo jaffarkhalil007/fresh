@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, ArrowLeft, ArrowRight, ShoppingBag, Tag, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Minus, Plus, Trash2, ArrowLeft, ArrowRight, ShoppingBag, Tag, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useCartStore } from '@/stores/cartStore';
 import { formatPrice } from '@/lib/currency';
 import { supabase } from '@/integrations/supabase/client';
+import { useDeliverySettings } from '@/hooks/useDeliverySettings';
 
 interface Coupon {
   id: string;
@@ -21,10 +22,48 @@ interface Coupon {
 }
 
 const Cart = () => {
-  const { items, updateQuantity, removeItem, getTotalPrice } = useCartStore();
-  const subtotal = getTotalPrice();
-  const shipping = subtotal > 0 ? (subtotal >= 1000 ? 0 : 150) : 0;
+  const { items, updateQuantity, removeItem } = useCartStore();
+  const navigate = useNavigate();
+  const { data: deliverySettings } = useDeliverySettings();
+  const FREE_DELIVERY_MIN = deliverySettings?.free_delivery_minimum ?? 1000;
+  const DELIVERY_FEE = deliverySettings?.delivery_fee ?? 150;
 
+  // ── Selection state (all selected by default) ──
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(items.map(i => i.product.id))
+  );
+
+  const allSelected = items.length > 0 && selectedIds.size === items.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < items.length;
+
+  const toggleItem = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(items.map(i => i.product.id)));
+  };
+
+  // Keep selectedIds in sync when items are removed
+  const syncedSelectedIds = useMemo(() => {
+    const itemIds = new Set(items.map(i => i.product.id));
+    return new Set([...selectedIds].filter(id => itemIds.has(id)));
+  }, [items, selectedIds]);
+
+  const selectedItems = items.filter(i => syncedSelectedIds.has(i.product.id));
+
+  // ── Pricing (based on selection only) ──
+  const subtotal = selectedItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  const shipping = subtotal > 0 ? (subtotal >= FREE_DELIVERY_MIN ? 0 : DELIVERY_FEE) : 0;
+  const progressToFreeShipping = Math.min((subtotal / FREE_DELIVERY_MIN) * 100, 100);
+
+  // ── Coupon ──
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState('');
@@ -37,19 +76,16 @@ const Cart = () => {
     : 0;
 
   const total = subtotal + shipping - discount;
-  const progressToFreeShipping = Math.min((subtotal / 1000) * 100, 100);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setIsValidating(true);
     setCouponError('');
-
     const { data, error } = await supabase
       .from('coupons')
       .select('*')
       .ilike('code', couponCode.trim())
       .single();
-
     if (error || !data) {
       setCouponError('Invalid coupon code. Please check and try again.');
       setAppliedCoupon(null);
@@ -60,7 +96,7 @@ const Cart = () => {
       setCouponError('This coupon has expired.');
       setAppliedCoupon(null);
     } else if (data.min_order_amount && subtotal < data.min_order_amount) {
-      setCouponError(`Minimum order of ${formatPrice(data.min_order_amount)} required to use this coupon.`);
+      setCouponError(`Minimum order of ${formatPrice(data.min_order_amount)} required.`);
       setAppliedCoupon(null);
     } else if (data.max_uses && (data.used_count ?? 0) >= data.max_uses) {
       setCouponError('This coupon has reached its usage limit.');
@@ -75,6 +111,18 @@ const Cart = () => {
   const removeCoupon = () => {
     setAppliedCoupon(null);
     setCouponError('');
+  };
+
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) return;
+    navigate('/checkout', {
+      state: {
+        selectedItems,
+        selectedProductIds: [...syncedSelectedIds],
+        appliedCoupon,
+        discount,
+      },
+    });
   };
 
   return (
@@ -108,83 +156,120 @@ const Cart = () => {
                 Looks like you haven't added anything to your cart yet. Discover our premium collection.
               </p>
               <Link to="/products" className="bg-[#242024] px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.1em] text-white transition-transform hover:-translate-y-0.5">
-                  Explore Products
+                Explore Products
               </Link>
             </motion.div>
           ) : (
             <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
-              <div className="space-y-4">
-                <AnimatePresence initial={false}>
-                  {items.map((item, index) => (
-                    <motion.div
-                      key={item.product.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20, scale: 0.95 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <div className="group flex gap-4 border-t border-[#e8e3e5] py-5 md:gap-6">
-                        <Link to={`/product/${item.product.id}`} className="relative h-24 w-24 shrink-0 overflow-hidden bg-[#f4f0ed] p-2">
-                          <img
-                            src={item.product.imageUrl}
-                            alt={item.product.name}
-                            className="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
-                          />
-                        </Link>
-                        
-                        <div className="flex-1 flex flex-col justify-between py-1">
-                          <div className="flex justify-between gap-4">
-                            <div>
-                              <Link to={`/product/${item.product.id}`} className="line-clamp-1 font-medium text-[#3f393e] transition-colors hover:text-[#186049]">
-                                {item.product.name}
-                              </Link>
-                              <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9a9298]">
-                                {item.product.category}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-[#186049]">
-                                {formatPrice(item.product.price)}
-                              </div>
-                            </div>
-                          </div>
+              {/* ── Items list ── */}
+              <div>
+                {/* Select All bar */}
+                <div className="flex items-center gap-3 border-t border-[#e8e3e5] py-3">
+                  <button
+                    onClick={toggleAll}
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center border transition-colors ${
+                      allSelected
+                        ? 'border-[#186049] bg-[#186049]'
+                        : someSelected
+                        ? 'border-[#186049] bg-[#e3f0ea]'
+                        : 'border-[#d8cfd3] bg-white hover:border-[#186049]'
+                    }`}
+                  >
+                    {allSelected && <Check className="h-3 w-3 text-white" />}
+                    {someSelected && <div className="h-1.5 w-1.5 bg-[#186049]" />}
+                  </button>
+                  <span className="text-xs font-medium text-[#777077]">
+                    Select All ({syncedSelectedIds.size} of {items.length} selected)
+                  </span>
+                </div>
 
-                          <div className="flex items-center justify-between">
-                            <div className="flex h-9 w-28 items-center justify-between border border-[#d8cfd3] bg-white px-1">
+                <AnimatePresence initial={false}>
+                  {items.map((item, index) => {
+                    const isSelected = syncedSelectedIds.has(item.product.id);
+                    return (
+                      <motion.div
+                        key={item.product.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20, scale: 0.95 }}
+                        transition={{ delay: index * 0.04 }}
+                      >
+                        <div className={`group flex gap-3 border-t border-[#e8e3e5] py-5 transition-colors md:gap-5 ${!isSelected ? 'opacity-60' : ''}`}>
+                          {/* Checkbox */}
+                          <button
+                            onClick={() => toggleItem(item.product.id)}
+                            className={`mt-6 flex h-5 w-5 shrink-0 items-center justify-center self-start border transition-colors ${
+                              isSelected
+                                ? 'border-[#186049] bg-[#186049]'
+                                : 'border-[#d8cfd3] bg-white hover:border-[#186049]'
+                            }`}
+                          >
+                            {isSelected && <Check className="h-3 w-3 text-white" />}
+                          </button>
+
+                          <Link to={`/product/${item.product.id}`} className="relative h-24 w-24 shrink-0 overflow-hidden bg-[#f4f0ed] p-2">
+                            <img
+                              src={item.product.imageUrl}
+                              alt={item.product.name}
+                              className="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
+                            />
+                          </Link>
+
+                          <div className="flex-1 flex flex-col justify-between py-1">
+                            <div className="flex justify-between gap-4">
+                              <div>
+                                <Link to={`/product/${item.product.id}`} className="line-clamp-1 font-medium text-[#3f393e] transition-colors hover:text-[#186049]">
+                                  {item.product.name}
+                                </Link>
+                                <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9a9298]">
+                                  {item.product.category}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className="font-semibold text-[#186049]">
+                                  {formatPrice(item.product.price * item.quantity)}
+                                </div>
+                                {item.quantity > 1 && (
+                                  <div className="text-[10px] text-[#9a9298]">
+                                    {formatPrice(item.product.price)} each
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex h-9 w-28 items-center justify-between border border-[#d8cfd3] bg-white px-1">
+                                <button
+                                  className="flex h-7 w-7 items-center justify-center text-[#3f393e] transition-colors hover:bg-[#eee9eb] disabled:opacity-50"
+                                  onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                  disabled={item.quantity <= 1}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                                <span className="text-sm font-medium text-[#3f393e]">{item.quantity}</span>
+                                <button
+                                  className="flex h-7 w-7 items-center justify-center text-[#3f393e] transition-colors hover:bg-[#eee9eb]"
+                                  onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </div>
+
                               <button
-                                className="flex h-7 w-7 items-center justify-center text-[#3f393e] transition-colors hover:bg-[#eee9eb] disabled:opacity-50"
-                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                                disabled={item.quantity <= 1}
+                                onClick={() => removeItem(item.product.id)}
+                                className="flex h-9 w-9 items-center justify-center text-[#9a9298] transition-colors hover:bg-[#fde8e8] hover:text-rose-500"
                               >
-                                <Minus className="h-3 w-3" />
-                              </button>
-                              <span className="text-sm font-medium text-[#3f393e]">{item.quantity}</span>
-                              <button
-                                className="flex h-7 w-7 items-center justify-center text-[#3f393e] transition-colors hover:bg-[#eee9eb]"
-                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              >
-                                <Plus className="h-3 w-3" />
+                                <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
-                            
-                            <button
-                              onClick={() => removeItem(item.product.id)}
-                              className="flex h-9 w-9 items-center justify-center text-[#9a9298] transition-colors hover:bg-[#e3f0ea] hover:text-[#186049]"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </AnimatePresence>
-                
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
+
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
                   <Link to="/products" className="mt-4 inline-flex items-center text-sm font-medium text-[#777077] transition-colors hover:text-[#186049]">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Continue Shopping
@@ -192,7 +277,7 @@ const Cart = () => {
                 </motion.div>
               </div>
 
-              {/* Order Summary */}
+              {/* ── Order Summary ── */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -200,7 +285,14 @@ const Cart = () => {
                 className="h-fit lg:sticky lg:top-36"
               >
                 <div className="bg-[#f4f0ed] p-6 md:p-8">
-                  <h3 className="mb-6 font-serif text-3xl text-[#242024]">Order Summary</h3>
+                  <div className="mb-1 flex items-center justify-between">
+                    <h3 className="font-serif text-3xl text-[#242024]">Order Summary</h3>
+                  </div>
+                  {syncedSelectedIds.size > 0 && (
+                    <p className="mb-5 text-[11px] text-[#9a9298]">
+                      {syncedSelectedIds.size} {syncedSelectedIds.size === 1 ? 'item' : 'items'} selected
+                    </p>
+                  )}
 
                   {/* Free Shipping Progress */}
                   <div className="mb-6 border-t border-[#e3dadd] pt-4">
@@ -210,26 +302,23 @@ const Cart = () => {
                     </div>
                     <div className="mb-2 h-1.5 w-full overflow-hidden bg-white">
                       <motion.div
-                        initial={{ width: 0 }}
                         animate={{ width: `${progressToFreeShipping}%` }}
-                        transition={{ duration: 1, ease: "easeOut" }}
+                        transition={{ duration: 0.6, ease: 'easeOut' }}
                         className="h-full bg-[#186049]"
                       />
                     </div>
-                    {subtotal >= 1000 ? (
+                    {subtotal >= FREE_DELIVERY_MIN ? (
                       <p className="text-xs text-[#186049]">You've unlocked free shipping!</p>
                     ) : (
                       <p className="text-xs text-[#9a9298]">
-                        Add <span className="text-[#3f393e]">Rs. {1000 - subtotal}</span> more for free shipping
+                        Add <span className="text-[#3f393e]">{formatPrice(FREE_DELIVERY_MIN - subtotal)}</span> more for free shipping
                       </p>
                     )}
                   </div>
 
                   {/* Coupon Code */}
                   <div className="mb-6 border-t border-[#e3dadd] pt-4">
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#716b70]">
-                      Promo Code
-                    </p>
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#716b70]">Promo Code</p>
                     <AnimatePresence mode="wait">
                       {appliedCoupon ? (
                         <motion.div
@@ -243,22 +332,12 @@ const Cart = () => {
                             <Tag className="h-3.5 w-3.5 text-emerald-600" />
                             <span className="font-mono text-xs font-bold text-emerald-700">{appliedCoupon.code}</span>
                           </div>
-                          <button
-                            onClick={removeCoupon}
-                            className="rounded p-0.5 text-emerald-500 transition-colors hover:bg-emerald-100 hover:text-emerald-700"
-                            aria-label="Remove coupon"
-                          >
+                          <button onClick={removeCoupon} className="rounded p-0.5 text-emerald-500 transition-colors hover:bg-emerald-100 hover:text-emerald-700">
                             <X className="h-3.5 w-3.5" />
                           </button>
                         </motion.div>
                       ) : (
-                        <motion.div
-                          key="input"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex gap-2"
-                        >
+                        <motion.div key="input" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex gap-2">
                           <input
                             value={couponCode}
                             onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
@@ -277,20 +356,12 @@ const Cart = () => {
                       )}
                     </AnimatePresence>
                     {couponError && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-1.5 text-xs text-rose-500"
-                      >
+                      <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="mt-1.5 text-xs text-rose-500">
                         {couponError}
                       </motion.p>
                     )}
                     {appliedCoupon && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-1.5 text-xs text-emerald-600"
-                      >
+                      <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="mt-1.5 text-xs text-emerald-600">
                         ✓ {appliedCoupon.discount_type === 'percentage'
                           ? `${appliedCoupon.discount_value}% off applied!`
                           : `${formatPrice(appliedCoupon.discount_value)} off applied!`}
@@ -307,7 +378,9 @@ const Cart = () => {
                     <div className="flex justify-between">
                       <span>Shipping</span>
                       <span className="font-medium text-[#3f393e]">
-                        {shipping === 0 ? <span className="text-[#186049]">Free</span> : formatPrice(shipping)}
+                        {subtotal === 0 ? '—' : shipping === 0
+                          ? <span className="text-[#186049]">Free</span>
+                          : formatPrice(shipping)}
                       </span>
                     </div>
                     <AnimatePresence>
@@ -328,30 +401,30 @@ const Cart = () => {
                   <div className="mb-8 border-t border-[#e3dadd] pt-6">
                     <div className="flex items-end justify-between">
                       <span className="font-medium text-[#3f393e]">Total</span>
-                      <span className="font-serif text-3xl text-[#186049]">
-                        {formatPrice(total)}
-                      </span>
+                      <span className="font-serif text-3xl text-[#186049]">{formatPrice(total)}</span>
                     </div>
-                    <p className="mt-2 text-right text-[10px] uppercase tracking-widest text-[#9a9298]">
-                      Including all taxes
-                    </p>
+                    <p className="mt-2 text-right text-[10px] uppercase tracking-widest text-[#9a9298]">Including all taxes</p>
                   </div>
 
-                  <Link
-                    to="/checkout"
-                    state={{ appliedCoupon, discount }}
-                    className="flex h-14 w-full items-center justify-center bg-[#242024] text-[10px] font-semibold uppercase tracking-[0.1em] text-white transition-transform hover:-translate-y-0.5"
+                  <button
+                    onClick={handleCheckout}
+                    disabled={syncedSelectedIds.size === 0}
+                    className="flex h-14 w-full items-center justify-center bg-[#242024] text-[10px] font-semibold uppercase tracking-[0.1em] text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Proceed to Checkout
                     <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
+                  </button>
+
+                  {syncedSelectedIds.size === 0 && (
+                    <p className="mt-3 text-center text-xs text-[#9a9298]">Select at least one item to continue</p>
+                  )}
                 </div>
               </motion.div>
             </div>
           )}
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

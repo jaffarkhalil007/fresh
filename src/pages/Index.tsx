@@ -52,10 +52,9 @@ const Index = () => {
 
         {randomProducts.length > 0 && (
           <ProductSection
-            title="Discover More"
             products={randomProducts}
-            viewAllLink="/products"
             scrollDirection="vertical"
+            bgColor="bg-[#fffdfc]"
           />
         )}
       </main>

@@ -2,6 +2,19 @@ import { supabase } from '@/integrations/supabase/client';
 
 type AdminBody = Record<string, any>;
 
+async function syncProductRating(productId: string) {
+  const { data: reviews } = await supabase
+    .from('reviews')
+    .select('rating')
+    .eq('product_id', productId);
+  const count = reviews?.length ?? 0;
+  const avg = count > 0 ? reviews!.reduce((s, r) => s + r.rating, 0) / count : 0;
+  await supabase
+    .from('products')
+    .update({ rating: Math.round(avg * 10) / 10, review_count: count })
+    .eq('id', productId);
+}
+
 /**
  * Edge function admin-data is not deployed on this project (CORS 404).
  * Same actions run against PostgREST instead.
@@ -30,11 +43,13 @@ export async function callAdminData(body: AdminBody) {
 
   if (action === 'create_review') {
     const { data, error } = await supabase.from('reviews').insert(body.reviewData).select().single();
+    if (!error && data) await syncProductRating(body.reviewData.product_id);
     return { data, error };
   }
 
   if (action === 'delete_review') {
     const { data, error } = await supabase.from('reviews').delete().eq('id', body.reviewId).select();
+    if (!error && data?.length) await syncProductRating(data[0].product_id);
     return { data, error };
   }
 

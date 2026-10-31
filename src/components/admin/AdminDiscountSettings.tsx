@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Percent, Tag, Save, X } from 'lucide-react';
+import { Percent, Tag, Save, X, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,13 +16,23 @@ interface FlatDiscountSettings {
   banner_text: string;
 }
 
+interface DeliverySettings {
+  free_delivery_minimum: number;
+  delivery_fee: number;
+}
+
 const AdminDiscountSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingDelivery, setSavingDelivery] = useState(false);
   const [settings, setSettings] = useState<FlatDiscountSettings>({
     enabled: false,
     percentage: 0,
     banner_text: '',
+  });
+  const [deliverySettings, setDeliverySettings] = useState<DeliverySettings>({
+    free_delivery_minimum: 1000,
+    delivery_fee: 150,
   });
 
   useEffect(() => {
@@ -31,27 +41,48 @@ const AdminDiscountSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('value')
-        .eq('key', 'flat_discount')
-        .maybeSingle();
+      const [discountRes, deliveryRes] = await Promise.all([
+        supabase.from('site_settings').select('value').eq('key', 'flat_discount').maybeSingle(),
+        supabase.from('site_settings').select('value').eq('key', 'delivery_settings').maybeSingle(),
+      ]);
 
-      if (error) throw error;
-      
-      if (data?.value) {
-        const value = data.value as unknown as FlatDiscountSettings;
+      if (discountRes.data?.value) {
+        const value = discountRes.data.value as unknown as FlatDiscountSettings;
         setSettings({
           enabled: value.enabled || false,
           percentage: value.percentage || 0,
           banner_text: value.banner_text || '',
         });
       }
+      if (deliveryRes.data?.value) {
+        const v = deliveryRes.data.value as unknown as DeliverySettings;
+        setDeliverySettings({
+          free_delivery_minimum: v.free_delivery_minimum ?? 1000,
+          delivery_fee: v.delivery_fee ?? 150,
+        });
+      }
     } catch (error) {
       console.error('Error fetching settings:', error);
-      toast.error('Failed to load discount settings');
+      toast.error('Failed to load settings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveDelivery = async () => {
+    setSavingDelivery(true);
+    try {
+      const { error } = await callAdminData({
+        action: 'update_settings',
+        key: 'delivery_settings',
+        value: JSON.parse(JSON.stringify(deliverySettings)),
+      });
+      if (error) throw error;
+      toast.success('Delivery settings saved');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save delivery settings');
+    } finally {
+      setSavingDelivery(false);
     }
   };
 
@@ -208,6 +239,65 @@ const AdminDiscountSettings = () => {
                 Disable Discount
               </Button>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Delivery Settings */}
+      <Card className="rounded-2xl border border-[#e8e3e5] bg-[#fffdfc] shadow-sm overflow-hidden">
+        <CardHeader className="border-b border-[#e8e3e5]/70 bg-[#faf7f5] px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[#e3f0ea] text-[#186049]">
+              <Truck className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="font-serif text-xl font-normal text-[#242024]">Delivery Settings</CardTitle>
+              <CardDescription className="text-xs text-[#716b70] mt-0.5">
+                Set the minimum order amount for free delivery and the standard delivery fee
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5 px-6 py-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#716b70]">
+                Free Delivery Above (Rs.)
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                value={deliverySettings.free_delivery_minimum}
+                onChange={(e) => setDeliverySettings({ ...deliverySettings, free_delivery_minimum: parseInt(e.target.value) || 0 })}
+                className="h-11 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] focus-visible:border-[#186049] focus-visible:ring-[#186049]/20"
+                placeholder="e.g. 1000"
+              />
+              <p className="text-xs text-[#9a9298]">Orders above this amount get free delivery</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#716b70]">
+                Standard Delivery Fee (Rs.)
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                value={deliverySettings.delivery_fee}
+                onChange={(e) => setDeliverySettings({ ...deliverySettings, delivery_fee: parseInt(e.target.value) || 0 })}
+                className="h-11 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] focus-visible:border-[#186049] focus-visible:ring-[#186049]/20"
+                placeholder="e.g. 150"
+              />
+              <p className="text-xs text-[#9a9298]">Fee charged when order is below the minimum</p>
+            </div>
+          </div>
+          <div className="pt-2 border-t border-[#e8e3e5]">
+            <Button
+              onClick={handleSaveDelivery}
+              disabled={savingDelivery}
+              className="h-11 rounded-xl bg-[#186049] hover:bg-[#145240] text-white px-6 font-medium shadow-sm transition-colors"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {savingDelivery ? 'Saving...' : 'Save Delivery Settings'}
+            </Button>
           </div>
         </CardContent>
       </Card>

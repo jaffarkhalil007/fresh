@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatPrice } from '@/lib/currency';
+import { useDeliverySettings } from '@/hooks/useDeliverySettings';
 
 const steps = [
   { id: 1, name: 'Shipping' },
@@ -34,14 +35,19 @@ const isUuid = (value: string) =>
 
 const Checkout = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const { items, buyNowItems, clearCart, clearBuyNowItems } = useCartStore();
-  const checkoutItems = buyNowItems ?? items;
+  const { items, buyNowItems, clearBuyNowItems, removeItems } = useCartStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const locationState = location.state ?? {};
+  const selectedItemsFromCart: typeof items = locationState.selectedItems ?? [];
+  const selectedProductIds: string[] = locationState.selectedProductIds ?? [];
+  const checkoutItems = buyNowItems ?? (selectedItemsFromCart.length > 0 ? selectedItemsFromCart : items);
   const { user } = useAuth();
+  const { data: deliverySettings } = useDeliverySettings();
+  const FREE_DELIVERY_MIN = deliverySettings?.free_delivery_minimum ?? 1000;
+  const DELIVERY_FEE = deliverySettings?.delivery_fee ?? 150;
 
   // Coupon — pre-seeded from Cart page if available, otherwise enter here
-  const locationState = location.state ?? {};
   const [appliedCoupon, setAppliedCoupon] = useState<any>(locationState.appliedCoupon ?? null);
   const [couponDiscount, setCouponDiscount] = useState<number>(locationState.discount ?? 0);
   const [couponCode, setCouponCode] = useState('');
@@ -104,7 +110,7 @@ const Checkout = () => {
     zipCode: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'jazzcash' | 'easypaisa' | 'sadapay'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'paynow'>('cod');
   const [tid, setTid] = useState('');
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -122,7 +128,7 @@ const Checkout = () => {
   }, [clearBuyNowItems]);
 
   const subtotal = checkoutItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
-  const shipping = subtotal > 0 ? (subtotal >= 1000 ? 0 : 150) : 0;
+  const shipping = subtotal > 0 ? (subtotal >= FREE_DELIVERY_MIN ? 0 : DELIVERY_FEE) : 0;
   const total = subtotal + shipping - couponDiscount;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,7 +156,7 @@ const Checkout = () => {
       }
     }
     if (currentStep === 2) {
-      if (paymentMethod !== 'cod') {
+      if (paymentMethod === 'paynow') {
         if (!tid && !paymentScreenshot) {
           toast.error('Please provide a Transaction ID (TID) or upload payment screenshot proof', { className: 'glass !bg-background/80 !border-rose-500/30 !text-foreground' });
           return;
@@ -205,7 +211,7 @@ const Checkout = () => {
         status: paymentMethod === 'cod' ? 'pending' : 'pending_verification',
         payment_screenshot_url: paymentScreenshotUrl,
         user_id: isUuid(verifiedUserId || '') ? verifiedUserId : null,
-        notes: `Email: ${formData.email || 'N/A'} | Payment: ${paymentMethod.toUpperCase()}${tid ? ` | TID: ${tid}` : ''}${appliedCoupon ? ` | Coupon: ${appliedCoupon.code} (-${formatPrice(couponDiscount)})` : ''}${verifiedUserId ? ` [clerk:${verifiedUserId}]` : ''}`
+        notes: `Email: ${formData.email || 'N/A'} | Payment: ${paymentMethod === 'paynow' ? 'PAY NOW' : 'COD'}${tid ? ` | TID: ${tid}` : ''}${appliedCoupon ? ` | Coupon: ${appliedCoupon.code} (-${formatPrice(couponDiscount)})` : ''}${verifiedUserId ? ` [clerk:${verifiedUserId}]` : ''}`
       };
 
       let order: { id: string } | null = null;
@@ -257,7 +263,35 @@ const Checkout = () => {
         throw itemsError;
       }
 
-      // 5. Best-effort order notification invocation
+      // 5. Decrement stock for each ordered product
+      for (const item of checkoutItems) {
+        if (!item.product.id || !isUuid(item.product.id)) continue;
+        try {
+          // Try SECURITY DEFINER RPC first (bypasses RLS, requires migration)
+          const { error: rpcErr } = await supabase.rpc('decrement_stock', {
+            p_id: item.product.id,
+            qty: item.quantity,
+          });
+          if (rpcErr) {
+            // Fallback: fetch current stock then update directly
+            const { data: prod } = await supabase
+              .from('products')
+              .select('stock_quantity')
+              .eq('id', item.product.id)
+              .single();
+            if (prod) {
+              await supabase
+                .from('products')
+                .update({ stock_quantity: Math.max(0, prod.stock_quantity - item.quantity) })
+                .eq('id', item.product.id);
+            }
+          }
+        } catch (e) {
+          console.error('Stock update failed for', item.product.id, e);
+        }
+      }
+
+      // 6. Best-effort order notification invocation
       try {
         await supabase.functions.invoke('send-order-notification', {
           body: { orderId: order.id, type: 'new_order' }
@@ -266,7 +300,7 @@ const Checkout = () => {
         console.log('Notification trigger non-blocking error:', e);
       }
 
-      // 6. Increment coupon used_count (best-effort, non-blocking)
+      // 7. Increment coupon used_count (best-effort, non-blocking)
       if (appliedCoupon) {
         try {
           await supabase
@@ -278,11 +312,13 @@ const Checkout = () => {
         }
       }
 
-      // 6. Complete Order
+      // 8. Complete Order — remove only the purchased items from cart
       if (buyNowItems) {
         clearBuyNowItems();
+      } else if (selectedProductIds.length > 0) {
+        removeItems(selectedProductIds);
       } else {
-        clearCart();
+        removeItems(checkoutItems.map(i => i.product.id));
       }
       toast.success('Order placed successfully!', { className: '!bg-[#fffdfc] !border-[#186049] !text-[#3f393e]' });
       navigate(`/orders/${order.id}`, { replace: true });
@@ -388,13 +424,11 @@ const Checkout = () => {
                       <div className="mb-8 grid gap-3">
                         {[
                           { id: 'cod', name: 'Cash on Delivery', desc: 'Pay when you receive' },
-                          { id: 'jazzcash', name: 'JazzCash', desc: 'Instant mobile transfer' },
-                          { id: 'easypaisa', name: 'EasyPaisa', desc: 'Instant mobile transfer' },
-                          { id: 'sadapay', name: 'SadaPay', desc: 'Bank transfer' }
+                          { id: 'paynow', name: 'Pay Now', desc: 'JazzCash · EasyPaisa · SadaPay' },
                         ].map((method) => (
-                          <div 
+                          <div
                             key={method.id}
-                            onClick={() => setPaymentMethod(method.id as any)}
+                            onClick={() => setPaymentMethod(method.id as 'cod' | 'paynow')}
                             className={`cursor-pointer border p-4 transition-all ${paymentMethod === method.id ? 'border-[#186049] bg-[#e3f0ea]' : 'border-[#e8e3e5] hover:border-[#d8cfd3] hover:bg-[#fffdfc]'}`}
                           >
                             <div className="flex items-center gap-4">
@@ -411,62 +445,37 @@ const Checkout = () => {
                       </div>
 
                       <AnimatePresence>
-                        {paymentMethod !== 'cod' && (
+                        {paymentMethod === 'paynow' && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
-                            <div className="relative mb-6 border-t border-[#e8e3e5] bg-[#f4f0ed] p-6">
-                              <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-[#186049]">Transfer Details</h3>
-                              
+                            <div className="mb-6 border-t border-[#e8e3e5] bg-[#f4f0ed] p-6">
+                              <h3 className="mb-1 text-sm font-bold uppercase tracking-wider text-[#186049]">Pay to any of these accounts</h3>
+                              <p className="mb-5 text-[11px] text-[#9a9298]">Transfer the total amount and upload proof below.</p>
+
                               <div className="space-y-4 mb-6">
-                                {paymentMethod === 'jazzcash' && (
-                                  <>
-                                    <div className="flex justify-between items-center text-sm">
-                                      <span className="text-[#9a9298]">Account Title:</span>
-                                      <span className="font-medium text-[#3f393e]">{JAZZCASH_ACCOUNT.name}</span>
+                                {[
+                                  { label: 'JazzCash', account: JAZZCASH_ACCOUNT },
+                                  { label: 'EasyPaisa', account: EASYPAISA_ACCOUNT },
+                                  { label: 'SadaPay', account: SADAPAY_ACCOUNT },
+                                ].map(({ label, account }) => (
+                                  <div key={label} className="flex items-center justify-between rounded border border-[#e3dadd] bg-white px-4 py-3">
+                                    <div>
+                                      <div className="text-[10px] font-bold uppercase tracking-widest text-[#9a9298]">{label}</div>
+                                      <div className="mt-0.5 text-sm font-medium text-[#3f393e]">{account.name}</div>
+                                      <div className="text-base font-bold text-[#186049]">{account.number}</div>
                                     </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                      <span className="text-[#9a9298]">JazzCash Number:</span>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-[#186049]">{JAZZCASH_ACCOUNT.number}</span>
-                                        <button onClick={() => copyToClipboard(JAZZCASH_ACCOUNT.number)} className="rounded p-1 hover:bg-[#eee9eb]"><Copy className="h-4 w-4 text-[#9a9298]" /></button>
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-                                {paymentMethod === 'easypaisa' && (
-                                  <>
-                                    <div className="flex justify-between items-center text-sm">
-                                      <span className="text-[#9a9298]">Account Title:</span>
-                                      <span className="font-medium text-[#3f393e]">{EASYPAISA_ACCOUNT.name}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                      <span className="text-[#9a9298]">EasyPaisa Number:</span>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-[#186049]">{EASYPAISA_ACCOUNT.number}</span>
-                                        <button onClick={() => copyToClipboard(EASYPAISA_ACCOUNT.number)} className="rounded p-1 hover:bg-[#eee9eb]"><Copy className="h-4 w-4 text-[#9a9298]" /></button>
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-                                {paymentMethod === 'sadapay' && (
-                                  <>
-                                    <div className="flex justify-between items-center text-sm">
-                                      <span className="text-[#9a9298]">Account Title:</span>
-                                      <span className="font-medium text-[#3f393e]">{SADAPAY_ACCOUNT.name}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center text-sm">
-                                      <span className="text-[#9a9298]">SadaPay IBAN / Phone:</span>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-[#186049]">{SADAPAY_ACCOUNT.number}</span>
-                                        <button onClick={() => copyToClipboard(SADAPAY_ACCOUNT.number)} className="rounded p-1 hover:bg-[#eee9eb]"><Copy className="h-4 w-4 text-[#9a9298]" /></button>
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
+                                    <button
+                                      onClick={() => copyToClipboard(account.number)}
+                                      className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded border border-[#e3dadd] hover:bg-[#eee9eb]"
+                                    >
+                                      <Copy className="h-4 w-4 text-[#9a9298]" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
 
                               <div className="space-y-4">
@@ -478,7 +487,7 @@ const Checkout = () => {
                                 <div className="space-y-2">
                                   <label className="text-[10px] font-bold uppercase tracking-widest text-[#777077]">Upload Payment Proof (Screenshot)</label>
                                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                                  <div 
+                                  <div
                                     onClick={() => fileInputRef.current?.click()}
                                     className="flex cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed border-[#d8cfd3] p-4 text-center transition-all hover:border-[#186049] hover:bg-white"
                                   >
@@ -531,8 +540,8 @@ const Checkout = () => {
                         <div>
                           <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#186049]">Payment Method</h3>
                           <div className="border-t border-[#e8e3e5] bg-[#f4f0ed] p-4 text-sm text-[#777077]">
-                            <span className="font-medium uppercase text-[#3f393e]">{paymentMethod}</span>
-                            {paymentMethod !== 'cod' && (
+                            <span className="font-medium uppercase text-[#3f393e]">{paymentMethod === 'paynow' ? 'Pay Now' : 'Cash on Delivery'}</span>
+                            {paymentMethod === 'paynow' && (
                               <div className="mt-1 flex flex-col gap-1">
                                 {tid && <div>TID: <span className="font-mono text-[#186049]">{tid}</span></div>}
                                 {paymentScreenshot && <div className="flex items-center gap-1 text-xs text-[#186049]"><ImageIcon className="h-3 w-3" /> Screenshot proof attached</div>}

@@ -33,7 +33,7 @@ import { formatPrice } from '@/lib/currency';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-type OrderStatus = 'pending_verification' | 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+type OrderStatus = 'pending_verification' | 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
 interface Order {
   id: string;
@@ -61,12 +61,24 @@ const statusColors: Record<OrderStatus, string> = {
   pending_verification: 'bg-orange-500',
   pending: 'bg-yellow-500',
   confirmed: 'bg-blue-500',
+  processing: 'bg-cyan-500',
   shipped: 'bg-purple-500',
   delivered: 'bg-green-500',
   cancelled: 'bg-red-500',
 };
 
-const statusOptions: OrderStatus[] = ['pending_verification', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+const statusOptions: OrderStatus[] = ['pending_verification', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+
+const TAB_DEFS: { value: string; label: string; status?: OrderStatus }[] = [
+  { value: 'all',                  label: 'All' },
+  { value: 'pending_verification', label: 'Pending Verification', status: 'pending_verification' },
+  { value: 'pending',              label: 'Pending',              status: 'pending' },
+  { value: 'confirmed',            label: 'Confirmed',            status: 'confirmed' },
+  { value: 'processing',           label: 'Processing',           status: 'processing' },
+  { value: 'shipped',              label: 'Shipped',              status: 'shipped' },
+  { value: 'delivered',            label: 'Delivered',            status: 'delivered' },
+  { value: 'cancelled',            label: 'Cancelled',            status: 'cancelled' },
+];
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -77,6 +89,11 @@ const AdminOrders = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('pending_verification');
+
+  const tabOrdersFor = (tabValue: string) =>
+    tabValue === 'all'
+      ? orders
+      : orders.filter(o => o.status === tabValue);
   const [adminNote, setAdminNote] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -303,14 +320,6 @@ const AdminOrders = () => {
     }
   };
 
-  const pendingVerificationOrders = orders.filter(o => o.status === 'pending_verification');
-  const allOtherOrders = orders.filter(o => o.status !== 'pending_verification');
-
-  const filteredOrders = orders.filter(order =>
-    order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.phone.includes(searchQuery) ||
-    order.id.includes(searchQuery)
-  );
 
   if (loading) {
     return (
@@ -431,31 +440,53 @@ const AdminOrders = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-slate-800">
-          <TabsTrigger value="pending_verification" className="data-[state=active]:bg-orange-600">
-            <AlertCircle className="h-4 w-4 mr-2" />
-            Pending Verification ({pendingVerificationOrders.length})
-          </TabsTrigger>
-          <TabsTrigger value="all" className="data-[state=active]:bg-primary">
-            All Orders ({allOtherOrders.length})
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="inline-flex min-w-max gap-1 bg-slate-800 p-1">
+            {TAB_DEFS.map((tab) => {
+              const count = tabOrdersFor(tab.value).length;
+              const isVerification = tab.value === 'pending_verification';
+              return (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className={`whitespace-nowrap text-xs data-[state=active]:text-white ${
+                    isVerification
+                      ? 'data-[state=active]:bg-orange-600'
+                      : tab.value === 'all'
+                      ? 'data-[state=active]:bg-slate-600'
+                      : tab.value === 'pending'
+                      ? 'data-[state=active]:bg-yellow-600'
+                      : tab.value === 'confirmed'
+                      ? 'data-[state=active]:bg-blue-600'
+                      : tab.value === 'processing'
+                      ? 'data-[state=active]:bg-cyan-600'
+                      : tab.value === 'shipped'
+                      ? 'data-[state=active]:bg-purple-600'
+                      : tab.value === 'delivered'
+                      ? 'data-[state=active]:bg-green-600'
+                      : 'data-[state=active]:bg-red-600'
+                  }`}
+                >
+                  {isVerification && <AlertCircle className="mr-1.5 h-3.5 w-3.5 shrink-0" />}
+                  {tab.label}
+                  <span className="ml-1.5 rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold leading-none text-slate-200">
+                    {count}
+                  </span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
 
-        <TabsContent value="pending_verification">
-          <Card className="bg-slate-800 border-slate-700">
-            <CardContent className="p-0">
-              {renderOrdersTable(pendingVerificationOrders)}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="all">
-          <Card className="bg-slate-800 border-slate-700">
-            <CardContent className="p-0">
-              {renderOrdersTable(allOtherOrders)}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {TAB_DEFS.map((tab) => (
+          <TabsContent key={tab.value} value={tab.value}>
+            <Card className="bg-slate-800 border-slate-700">
+              <CardContent className="p-0">
+                {renderOrdersTable(tabOrdersFor(tab.value))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
       </Tabs>
 
       {/* Order Details Dialog */}

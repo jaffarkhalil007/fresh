@@ -7,8 +7,11 @@ import { useCartStore } from '@/stores/cartStore';
 import SearchAutocomplete from '@/components/search/SearchAutocomplete';
 import { categories } from '@/data/products';
 import { useFlatDiscount } from '@/hooks/useFlatDiscount';
+import {  useDeliverySettings } from "@/hooks/useDeliverySettings";
 
 const Header = () => {
+  const { data: deliverySettings } = useDeliverySettings();
+  const FREE_DELIVERY_MIN = deliverySettings?.free_delivery_minimum ?? 1000;
   const [isScrolled, setIsScrolled] = useState(false);
   const [showSubnav, setShowSubnav] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -44,7 +47,7 @@ const Header = () => {
             <span>
               {discount.enabled && discount.percentage > 0
                 ? (discount.banner_text || `🎉 Flat ${discount.percentage}% OFF on all products today!`)
-                : 'Free standard shipping on orders over ₨4,000'}
+                : `Free standard shipping on orders above Rs.${FREE_DELIVERY_MIN.toLocaleString()}`}
             </span>
             <div className="flex items-center gap-5">
               <a href="/orders" className="hover:text-white transition-colors">Track order</a>
@@ -90,7 +93,7 @@ const Header = () => {
                   transition={{ duration: 0.2, ease: 'easeInOut' }}
                   className="shrink-0"
                 >
-                  <Link to="/" className="font-serif text-[24px] tracking-[0.08em] text-[#242024] md:text-[26px]">
+                  <Link to="/" className="font-serif text-[24px] tracking-[0.08em] text-[#242024] md:text-[24px]">
                     HAMAASH
                   </Link>
                 </motion.div>

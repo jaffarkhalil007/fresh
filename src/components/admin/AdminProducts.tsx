@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { Plus, Pencil, Trash2, Search, UploadCloud, FileJson, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, UploadCloud, Image as ImageIcon, Loader2, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,13 +20,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -45,6 +44,7 @@ interface Product {
   discount_percentage: number | null;
   delivery_fee: number | null;
   category: string;
+  categories?: string[] | null;
   image_url: string | null;
   image_urls: string[] | null;
   stock_quantity: number;
@@ -53,14 +53,20 @@ interface Product {
   is_exclusive: boolean | null;
   is_promotional: boolean | null;
   is_active: boolean | null;
+  specifications?: Record<string, string> | null;
 }
+
+interface SpecRow { key: string; value: string; }
 
 const initialFormData = {
   name: '',
   description: '',
   price: '',
   original_price: '',
-  discount_percentage: '',  delivery_fee: '',  category: '',
+  discount_percentage: '',
+  delivery_fee: '',
+  category: '',
+  categories: [] as string[],
   image_urls: [] as string[],
   stock_quantity: '',
   unit: '1 piece',
@@ -79,6 +85,7 @@ const AdminProducts = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState(initialFormData);
+  const [specRows, setSpecRows] = useState<SpecRow[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [quickUploadProductId, setQuickUploadProductId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,7 +106,9 @@ const AdminProducts = () => {
       setProducts(data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
+      toast.error(
+        `Failed to load products: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       setLoading(false);
     }
@@ -134,7 +143,9 @@ const AdminProducts = () => {
       toast.success(`${uploadedUrls.length} image${uploadedUrls.length > 1 ? 's' : ''} uploaded`);
     } catch (error: any) {
       console.error('Upload Error:', error);
-      toast.error('Failed to upload image. Make sure the "product-images" bucket exists and has correct permissions.');
+      toast.error(
+        `Image upload failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     } finally {
       setIsUploadingImage(false);
     }
@@ -175,7 +186,10 @@ const AdminProducts = () => {
       fetchProducts(); // Refresh list to show new image
     } catch (error: any) {
       console.error('Quick Upload Error:', error);
-      toast.error('Failed to add image. Check bucket permissions.', { id: toastId });
+      toast.error(
+        `Image upload failed: ${error instanceof Error ? error.message : String(error)}`,
+        { id: toastId }
+      );
     } finally {
       setQuickUploadProductId(null);
       if (quickUploadRef.current) quickUploadRef.current.value = '';
@@ -263,14 +277,18 @@ const AdminProducts = () => {
   const handleOpenDialog = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
+      const existingCategories = product.categories?.length
+        ? product.categories
+        : product.category ? [product.category] : [];
       setFormData({
         name: product.name,
         description: product.description || '',
         price: product.price.toString(),
         original_price: product.original_price?.toString() || '',
         discount_percentage: product.discount_percentage?.toString() || '',
-          delivery_fee: product.delivery_fee?.toString() || '',
+        delivery_fee: product.delivery_fee?.toString() || '',
         category: product.category,
+        categories: existingCategories,
         image_urls: product.image_urls?.length ? product.image_urls : product.image_url ? [product.image_url] : [],
         stock_quantity: product.stock_quantity.toString(),
         unit: product.unit || '1 piece',
@@ -279,28 +297,55 @@ const AdminProducts = () => {
         is_promotional: product.is_promotional || false,
         is_active: product.is_active ?? true,
       });
+      const existingSpecs = product.specifications
+        ? Object.entries(product.specifications).map(([key, value]) => ({ key, value }))
+        : [];
+      setSpecRows(existingSpecs);
     } else {
       setEditingProduct(null);
       setFormData(initialFormData);
+      setSpecRows([]);
     }
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
     try {
+      if (formData.stock_quantity.trim() === '') {
+        toast.error('Enter a stock quantity. Use 0 only when the product is out of stock.');
+        return;
+      }
+
+      const stockQuantity = Number(formData.stock_quantity);
+      if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
+        toast.error('Stock quantity must be a whole number greater than or equal to 0');
+        return;
+      }
+
+      const selectedCategories = formData.categories.length > 0 ? formData.categories : formData.category ? [formData.category] : [];
+
+      // Build specifications object from rows (skip blank keys)
+      const specsObj = specRows.reduce<Record<string, string>>((acc, row) => {
+        const k = row.key.trim();
+        if (k) acc[k] = row.value.trim();
+        return acc;
+      }, {});
+
       const productData = {
         name: formData.name,
         description: formData.description || null,
         price: parseFloat(formData.price),
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
         discount_percentage: formData.discount_percentage ? parseInt(formData.discount_percentage) : null,
-          delivery_fee: formData.delivery_fee ? parseInt(formData.delivery_fee) : null,
-        category: formData.category,
-        // The first picture is the main one shown on cards and in the cart.
+        delivery_fee: formData.delivery_fee ? parseInt(formData.delivery_fee) : null,
+        // Primary category = first selected; categories = all selected
+        category: selectedCategories[0] || formData.category,
+        categories: selectedCategories,
         image_url: formData.image_urls[0] || null,
         image_urls: formData.image_urls,
-        stock_quantity: parseInt(formData.stock_quantity),
+        stock_quantity: stockQuantity,
         unit: formData.unit,
+        specifications: Object.keys(specsObj).length > 0 ? specsObj : null,
         is_top_selling: formData.is_top_selling,
         is_exclusive: formData.is_exclusive,
         is_promotional: formData.is_promotional,
@@ -452,22 +497,53 @@ const AdminProducts = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#716b70]">Category *</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    >
-                      <SelectTrigger className="h-11 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] focus:ring-[#a35d70]/20">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.slug}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#716b70]">
+                      Categories * <span className="normal-case font-normal text-[#9a9298]">(select one or more)</span>
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-11 w-full items-center justify-between rounded-xl border border-[#d8cfd3] bg-white px-3 text-sm text-[#3f393e] focus:outline-none focus:ring-2 focus:ring-[#a35d70]/20"
+                        >
+                          <span className={formData.categories.length === 0 ? 'text-[#b1a8ad]' : ''}>
+                            {formData.categories.length === 0
+                              ? 'Select categories'
+                              : formData.categories.map(slug => categories.find(c => c.slug === slug)?.name || slug).join(', ')}
+                          </span>
+                          <ChevronDown className="h-4 w-4 text-[#9a9298]" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 p-3 space-y-2 max-h-60 overflow-y-auto">
+                        {categories.map((cat) => {
+                          const checked = formData.categories.includes(cat.slug);
+                          return (
+                            <div key={cat.id} className="flex items-center gap-2">
+                              <Checkbox
+                                id={`cat-${cat.id}`}
+                                checked={checked}
+                                onCheckedChange={(val) => {
+                                  const updated = val
+                                    ? [...formData.categories, cat.slug]
+                                    : formData.categories.filter((s) => s !== cat.slug);
+                                  setFormData({
+                                    ...formData,
+                                    categories: updated,
+                                    category: updated[0] || '',
+                                  });
+                                }}
+                              />
+                              <label htmlFor={`cat-${cat.id}`} className="text-sm text-[#3f393e] cursor-pointer">
+                                {cat.name}
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </PopoverContent>
+                    </Popover>
+                    {formData.categories.length > 1 && (
+                      <p className="text-[10px] text-[#9a9298]">Primary category: <strong>{categories.find(c => c.slug === formData.categories[0])?.name || formData.categories[0]}</strong></p>
+                    )}
                   </div>
                 </div>
 
@@ -528,6 +604,8 @@ const AdminProducts = () => {
                     <Label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#716b70]">Stock Quantity *</Label>
                     <Input
                       type="number"
+                      min="0"
+                      step="1"
                       value={formData.stock_quantity}
                       onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
                       className="h-11 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] focus-visible:border-[#a35d70] focus-visible:ring-[#a35d70]/20"
@@ -579,6 +657,49 @@ const AdminProducts = () => {
                   </div>
                 </div>
 
+                {/* Specifications */}
+                <div className="rounded-2xl border border-[#e8e3e5] bg-[#fffdfc] p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a35d70]">Specifications</p>
+                    <button
+                      type="button"
+                      onClick={() => setSpecRows(prev => [...prev, { key: '', value: '' }])}
+                      className="flex items-center gap-1 rounded-lg bg-[#f4dfe3] px-3 py-1.5 text-[11px] font-semibold text-[#8f4f60] transition-colors hover:bg-[#f0cfd5]"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Specification
+                    </button>
+                  </div>
+                  {specRows.length === 0 && (
+                    <p className="text-[11px] text-[#b1a8ad]">No specifications yet. Click "Add Specification" to add key-value pairs like Brand, RAM, Color, Warranty…</p>
+                  )}
+                  <div className="space-y-2">
+                    {specRows.map((row, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Input
+                          value={row.key}
+                          onChange={e => setSpecRows(prev => prev.map((r, idx) => idx === i ? { ...r, key: e.target.value } : r))}
+                          placeholder="e.g. Brand"
+                          className="h-9 rounded-xl border-[#d8cfd3] bg-[#f4f0ed] text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70] focus-visible:ring-[#a35d70]/20"
+                        />
+                        <Input
+                          value={row.value}
+                          onChange={e => setSpecRows(prev => prev.map((r, idx) => idx === i ? { ...r, value: e.target.value } : r))}
+                          placeholder="e.g. Samsung"
+                          className="h-9 rounded-xl border-[#d8cfd3] bg-[#f4f0ed] text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70] focus-visible:ring-[#a35d70]/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSpecRows(prev => prev.filter((_, idx) => idx !== i))}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#e8e3e5] text-[#9a9298] transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="flex items-center justify-between rounded-xl border border-[#e8e3e5] bg-[#f4f0ed] p-4">
                     <Label className="text-sm font-medium text-[#4e484d]">Top Selling</Label>
@@ -614,7 +735,7 @@ const AdminProducts = () => {
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="rounded-xl border-[#d8cfd3] text-[#716b70] hover:bg-[#f4f0ed]">
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} disabled={!formData.name || !formData.price || !formData.category} className="rounded-xl bg-[#a35d70] px-6 text-white hover:bg-[#8f4f60]">
+                  <Button onClick={handleSave} disabled={!formData.name || !formData.price || formData.categories.length === 0} className="rounded-xl bg-[#a35d70] px-6 text-white hover:bg-[#8f4f60]">
                     {editingProduct ? 'Update' : 'Create'}
                   </Button>
                 </div>
@@ -666,7 +787,9 @@ const AdminProducts = () => {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-slate-300 capitalize">{product.category}</TableCell>
+                  <TableCell className="text-slate-300 capitalize">
+                    {product.categories?.length ? product.categories.join(', ') : product.category}
+                  </TableCell>
                   <TableCell className="text-slate-300">{formatPrice(product.price)}</TableCell>
                   <TableCell className="text-slate-300">{product.stock_quantity}</TableCell>
                   <TableCell>

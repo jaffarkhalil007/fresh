@@ -10,6 +10,7 @@ export interface Product {
   discountPercentage?: number;
   deliveryFee?: number;
   category: string;
+  categories?: string[];
   imageUrl: string;
   images?: string[];
   stockQuantity: number;
@@ -19,6 +20,7 @@ export interface Product {
   rating: number;
   reviewCount: number;
   unit: string;
+  specifications?: Record<string, string> | null;
 }
 
 export interface CartItem {
@@ -33,6 +35,7 @@ interface CartStore {
   setBuyNowItem: (product: Product, quantity?: number) => void;
   clearBuyNowItems: () => void;
   removeItem: (productId: string) => void;
+  removeItems: (productIds: string[]) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
@@ -71,6 +74,13 @@ export const useCartStore = create<CartStore>()(
       removeItem: (productId) => {
         set((state) => ({
           items: state.items.filter(item => item.product.id !== productId),
+        }));
+      },
+
+      removeItems: (productIds) => {
+        const idSet = new Set(productIds);
+        set((state) => ({
+          items: state.items.filter(item => !idSet.has(item.product.id)),
         }));
       },
       

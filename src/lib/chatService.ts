@@ -20,8 +20,6 @@ export interface Conversation {
 const STORAGE_KEY_PREFIX = 'snapcart_conversations';
 const ADMIN_STORAGE_KEY = `${STORAGE_KEY_PREFIX}:admin`;
 const CHANNEL_NAME = 'snapcart_chat_channel';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Create a BroadcastChannel for instant cross-tab communication
 let broadcastChannel: BroadcastChannel | null = null;
@@ -36,42 +34,6 @@ try {
 const getStorageKey = (customerUserId?: string, isAdmin = false) =>
   isAdmin ? ADMIN_STORAGE_KEY : `${STORAGE_KEY_PREFIX}:customer:${customerUserId || 'anonymous'}`;
 
-const getClerkToken = async () => {
-  const token = await window.Clerk?.session?.getToken({ template: 'supabase' });
-  if (!token) {
-    throw new Error('No Clerk Supabase session token is available.');
-  }
-  return token;
-};
-
-const invokeAdminChat = async (body: Record<string, string>) => {
-  const token = await getClerkToken();
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      apikey: SUPABASE_PUBLISHABLE_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-
-  const rawBody = await response.text();
-  let payload: any = null;
-  try {
-    payload = rawBody ? JSON.parse(rawBody) : null;
-  } catch {
-    payload = null;
-  }
-
-  if (!response.ok) {
-    const detail = payload?.error || payload?.message || rawBody || `Request failed (${response.status})`;
-    throw new Error(`Chat request failed (${response.status}): ${detail}`);
-  }
-
-  return { data: payload, error: null };
-};
-
 export const getStoredConversations = async (
   forceRemote = false,
   customerUserId?: string,
@@ -84,22 +46,36 @@ export const getStoredConversations = async (
   const storageKey = getStorageKey(customerUserId, isAdmin);
 
   if (isAdmin) {
-    const { data, error } = await invokeAdminChat({ action: 'chat_list' });
-    if (error) throw error;
-    const conversations = ((data || []) as any[]).map((conv) => ({
-      id: conv.id,
-      customer_name: conv.customer_name || 'Customer',
-      subject: conv.subject || 'Order Support',
-      status: conv.status || 'open',
-      last_message_at: conv.last_message_at || conv.created_at,
-      last_message_preview: conv.last_message_preview || '',
-      messages: (conv.messages || []).map((message: any) => ({
-        id: message.id,
-        sender_type: message.sender_type,
-        message: message.message,
-        created_at: message.created_at,
-      })),
-    }));
+    const { data: dbConversations, error: conversationsError } = await supabase
+      .from('conversations')
+      .select('*')
+      .order('last_message_at', { ascending: false });
+    if (conversationsError) throw conversationsError;
+
+    const conversations: Conversation[] = [];
+    for (const conv of dbConversations || []) {
+      const { data: dbMessages, error: messagesError } = await supabase
+        .from('conversation_messages')
+        .select('*')
+        .eq('conversation_id', conv.id)
+        .order('created_at', { ascending: true });
+      if (messagesError) throw messagesError;
+
+      conversations.push({
+        id: conv.id,
+        customer_name: conv.customer_name || 'Customer',
+        subject: conv.subject || 'Order Support',
+        status: (conv.status || 'open') as Conversation['status'],
+        last_message_at: conv.last_message_at || conv.created_at,
+        last_message_preview: conv.last_message_preview || '',
+        messages: (dbMessages || []).map((message) => ({
+          id: message.id,
+          sender_type: message.sender_type as ChatMessage['sender_type'],
+          message: message.message,
+          created_at: message.created_at,
+        })),
+      });
+    }
     localStorage.setItem(storageKey, JSON.stringify(conversations));
     return conversations;
   }
@@ -240,23 +216,40 @@ export const appendMessage = async (
   const isCustomerMessage = senderType === 'customer';
 
   if (!isCustomerMessage) {
-    const { data, error } = await invokeAdminChat({
-      action: 'chat_reply',
-      conversationId: convId,
-      message: messageText,
-    });
-    if (error) throw error;
+    const text = messageText.trim();
+    if (!text) throw new Error('Reply message cannot be empty.');
+
+    const { data, error: messageError } = await supabase
+      .from('conversation_messages')
+      .insert({
+        conversation_id: convId,
+        sender_type: 'owner',
+        message: text,
+      })
+      .select()
+      .single();
+    if (messageError) throw messageError;
+
+    const { error: conversationError } = await supabase
+      .from('conversations')
+      .update({
+        last_message_at: data.created_at,
+        last_message_preview: text,
+      })
+      .eq('id', convId);
+    if (conversationError) throw conversationError;
+
     return {
       id: data.id,
       customer_name: customerName,
       subject: 'Support Inquiry',
       status: 'open' as const,
       last_message_at: data.created_at,
-      last_message_preview: messageText,
+      last_message_preview: text,
       messages: [{
         id: data.id,
         sender_type: 'owner' as const,
-        message: messageText,
+        message: text,
         created_at: data.created_at,
       }],
     };

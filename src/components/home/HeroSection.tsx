@@ -43,6 +43,7 @@ const HeroSection = ({ products, banners = [] }: HeroSectionProps) => {
       }));
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
     if (slides.length < 2) return;
@@ -73,7 +74,7 @@ const HeroSection = ({ products, banners = [] }: HeroSectionProps) => {
   );
 
   return (
-    <section className="hero-editorial pt-[48px] md:pt-24 lg:pt-32">
+    <section className="hero-editorial pt-[52px] md:pt-24 lg:pt-32">
       <div className="mx-auto w-full">
         {/* <div className="flex min-h-[340px] flex-col justify-center bg-[#d8c5ee] p-7 md:min-h-[430px] md:p-10">
           <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#72577e]">✣ Vertexo trends</p>
@@ -82,7 +83,16 @@ const HeroSection = ({ products, banners = [] }: HeroSectionProps) => {
           <Link to="/products" className="mt-7 inline-flex w-fit bg-[#252126] px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5">Shop the edit <span className="ml-3">→</span></Link>
         </div> */}
         {activeSlide ? (
-          <div className="relative h-[22vh] min-h-[160px] w-full overflow-hidden bg-[#d9e7e3] md:h-[36vh] md:min-h-[300px]">
+          <div
+            className="relative h-[22vh] min-h-[160px] w-full overflow-hidden bg-[#d9e7e3] md:h-[36vh] md:min-h-[300px]"
+            onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+              if (touchStartX === null) return;
+              const diff = touchStartX - e.changedTouches[0].clientX;
+              if (Math.abs(diff) > 40) diff > 0 ? showNext() : showPrevious();
+              setTouchStartX(null);
+            }}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSlide.key}
@@ -106,11 +116,20 @@ const HeroSection = ({ products, banners = [] }: HeroSectionProps) => {
 
             {slides.length > 1 && (
               <>
-                <button type="button" onClick={showPrevious} aria-label="Previous banner" className="absolute left-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#242024] shadow-lg transition-transform hover:scale-105 md:left-8"><ArrowLeft className="h-4 w-4" /></button>
-                <button type="button" onClick={showNext} aria-label="Next banner" className="absolute right-4 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#242024] shadow-lg transition-transform hover:scale-105 md:right-8"><ArrowRight className="h-4 w-4" /></button>
-                <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/30 px-3 py-2 backdrop-blur-sm md:bottom-8">
+                {/* Arrows — desktop only, smaller + transparent */}
+                <button type="button" onClick={showPrevious} aria-label="Previous banner" className="absolute left-4 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur-sm transition-all hover:bg-white/50 md:flex md:left-6"><ArrowLeft className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={showNext} aria-label="Next banner" className="absolute right-4 top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur-sm transition-all hover:bg-white/50 md:flex md:right-6"><ArrowRight className="h-3.5 w-3.5" /></button>
+
+                {/* Plain dots */}
+                <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 md:bottom-5">
                   {slides.map((slide, index) => (
-                    <button key={slide.key} type="button" onClick={() => setActiveIndex(index)} aria-label={`Show banner ${index + 1}`} className={`h-2.5 w-2.5 rounded-full border border-white transition-all ${index === safeIndex ? 'scale-125 bg-white' : 'bg-transparent'}`} />
+                    <button
+                      key={slide.key}
+                      type="button"
+                      onClick={() => setActiveIndex(index)}
+                      aria-label={`Show banner ${index + 1}`}
+                      className={`rounded-full transition-all duration-300 ${index === safeIndex ? 'w-4 h-1.5 bg-white' : 'h-1.5 w-1.5 bg-white/50'}`}
+                    />
                   ))}
                 </div>
               </>

@@ -32,6 +32,7 @@ const formatProduct = (
     }
   }
 
+  const cats = (data as any).categories as string[] | null | undefined;
   return {
     id: data.id,
     name: data.name,
@@ -39,8 +40,9 @@ const formatProduct = (
     price,
     originalPrice,
     discountPercentage,
-    deliveryFee: data.delivery_fee || 0,
+    deliveryFee: (data as any).delivery_fee || 0,
     category: data.category,
+    categories: cats?.length ? cats : [data.category],
     imageUrl: data.image_url || '/placeholder.svg',
     images: data.image_urls?.length ? data.image_urls : data.image_url ? [data.image_url] : [],
     stockQuantity: data.stock_quantity || 0,
@@ -50,6 +52,7 @@ const formatProduct = (
     rating: data.rating || 4.5,
     reviewCount: data.review_count || 0,
     unit: data.unit || '1 piece',
+    specifications: (data as any).specifications || null,
   };
 };
 

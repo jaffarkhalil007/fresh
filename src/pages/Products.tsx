@@ -67,9 +67,12 @@ const Products = () => {
       );
     }
 
-    // Category filter
+    // Category filter — check both primary category and the categories array
     if (selectedCategories.length > 0) {
-      filtered = filtered.filter((p) => selectedCategories.includes(p.category));
+      filtered = filtered.filter((p) =>
+        selectedCategories.includes(p.category) ||
+        (p.categories && p.categories.some((c) => selectedCategories.includes(c)))
+      );
     }
 
     // Special filters

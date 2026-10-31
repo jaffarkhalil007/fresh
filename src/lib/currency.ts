@@ -4,7 +4,7 @@ export const formatPrice = (price: number | undefined | null): string => {
   if (price === undefined || price === null || isNaN(price)) {
     return '₨ 0';
   }
-  return `₨ ${price.toLocaleString('en-PK')}`;
+  return `₨ ${Math.round(price).toLocaleString('en-PK')}`;
 };
 
 export const CURRENCY_SYMBOL = '₨';

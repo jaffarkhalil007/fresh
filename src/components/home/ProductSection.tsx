@@ -5,13 +5,14 @@ import { Product } from '@/stores/cartStore';
 import { motion } from 'framer-motion';
 
 interface ProductSectionProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   products: Product[];
   viewAllLink?: string;
   badge?: string;
   badgeColor?: string;
   scrollDirection?: 'horizontal' | 'vertical';
+  bgColor?: string;
 }
 
 const ProductSection = ({
@@ -21,12 +22,13 @@ const ProductSection = ({
   viewAllLink,
   badge,
   scrollDirection = 'horizontal',
+  bgColor = 'bg-[#f4f0ed]',
 }: ProductSectionProps) => {
   return (
-    <section className="relative z-10 bg-[#f4f0ed] py-4 md:py-6">
+    <section className={`relative z-10 ${bgColor} py-4 md:py-6`}>
       <div className="mx-auto max-w-[1440px] px-4 md:px-8">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-4 md:mb-6">
+        {/* Header — omitted when no title is provided */}
+        {(title || viewAllLink) && <div className="flex items-center justify-between gap-4 mb-4 md:mb-6">
           <div>
             {badge && (
               <motion.div
@@ -77,11 +79,11 @@ const ProductSection = ({
               </Link>
             </motion.div>
           )}
-        </div>
+        </div>}
 
         {/* Products list: vertical grid or horizontal scroll */}
         {scrollDirection === 'vertical' ? (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 xl:grid-cols-5 lg:gap-x-4">
+          <div className="-mx-4 grid grid-cols-2 gap-x-2 gap-y-4 px-2 md:mx-0 md:gap-x-3 md:gap-y-6 md:px-0 md:grid-cols-4 xl:grid-cols-5 lg:gap-x-4">
             {products.map((product, index) => (
               <motion.div
                 key={product.id}
@@ -95,19 +97,30 @@ const ProductSection = ({
             ))}
           </div>
         ) : (
-          <div className="flex overflow-x-auto gap-3.5 sm:gap-4 pb-4 pt-1 scrollbar-none scroll-smooth">
-            {products.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ delay: index * 0.04 }}
-                className="w-[165px] min-w-[165px] sm:w-[200px] sm:min-w-[200px] md:w-[240px] md:min-w-[240px] shrink-0"
-              >
-                <ProductCard product={product} />
-              </motion.div>
-            ))}
+          /* Break out of the max-w container so cards can peek at the right edge */
+          <div className="-mx-4 md:-mx-8 overflow-x-auto scrollbar-none scroll-smooth">
+            <div className="flex gap-2 px-2 pb-4 md:gap-4 md:px-8">
+              {products.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ delay: index * 0.04 }}
+                  /* vw-based widths: show N complete cards with ~40px partial of the next */
+                  className="w-[40vw] min-w-[40vw] shrink-0
+                             sm:w-[30vw] sm:min-w-[30vw]
+                             md:w-[27vw] md:min-w-[27vw]
+                             lg:w-[22vw] lg:min-w-[22vw]
+                             xl:w-[18vw] xl:min-w-[18vw]
+                             max-w-[280px]"
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+              {/* Right-edge spacer so last card isn't flush against the edge */}
+              <div className="shrink-0 w-4 md:w-8" />
+            </div>
           </div>
         )}
       </div>
