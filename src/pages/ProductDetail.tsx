@@ -297,11 +297,11 @@ const ProductDetail = () => {
 
               {/* Unit & Stock — small info row below price */}
               <div className="mb-3 flex items-center gap-3">
-                <span className="text-[9px] text-[#9a9298]">
+                <span className="text-xs text-[#9a9298]">
                   Unit: <span className="font-medium text-[#5f595d]">{product.unit}</span>
                 </span>
                 <span className="text-[#e3dadd]">·</span>
-                <span className="text-[9px] text-[#9a9298]">
+                <span className="text-xs text-[#9a9298]">
                   Stock:{" "}
                   {product.stockQuantity > 0 ? (
                     <span className="font-medium text-[#5f595d]">{product.stockQuantity} available</span>
