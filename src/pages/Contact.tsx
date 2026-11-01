@@ -110,15 +110,15 @@ const Contact = () => {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#fffdfc]">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-[#fffdfc]">
       <Header />
-      
-      <main className="flex-1">
-        <section className="border-b border-[#e8e3e5] bg-[#d9e7e3] pt-36 md:pt-40">
-          <div className="mx-auto grid max-w-[1440px] gap-8 px-4 pb-12 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:pb-16">
+
+      <main className="flex-1 w-full">
+        <section className="w-full border-b border-[#e8e3e5] bg-[#d9e7e3] pt-36 md:pt-40">
+          <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 pb-12 md:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:pb-16">
             <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
               <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#186049]">The Hamaash help desk</p>
-              <h1 className="max-w-xl font-serif text-5xl leading-[0.95] text-[#242024] md:text-7xl">
+              <h1 className="font-serif text-4xl leading-[0.95] text-[#242024] md:text-5xl lg:text-6xl">
                 Let&apos;s make it <em className="text-[#186049]">easy.</em>
               </h1>
             </motion.div>

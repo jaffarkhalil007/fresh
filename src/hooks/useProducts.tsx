@@ -53,6 +53,7 @@ const formatProduct = (
     reviewCount: data.review_count || 0,
     unit: data.unit || '1 piece',
     specifications: (data as any).specifications || null,
+    variants: (data as any).variants || null,
   };
 };
 

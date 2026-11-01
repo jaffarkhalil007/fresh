@@ -1,6 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export interface ProductVariant {
+  id: string;
+  name: string;
+  price: number;
+  image_url?: string;
+  stock_quantity?: number;
+  description?: string;
+  original_price?: number;
+  discount_percentage?: number;
+  specifications?: Record<string, string>;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -21,22 +33,32 @@ export interface Product {
   reviewCount: number;
   unit: string;
   specifications?: Record<string, string> | null;
+  variants?: ProductVariant[] | null;
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedVariant?: ProductVariant;
 }
+
+// Composite key: distinguishes same product with different variants in cart
+export const cartItemKey = (productId: string, variantId?: string) =>
+  variantId ? `${productId}__v__${variantId}` : productId;
+
+// Effective price for a cart item (variant price overrides product price)
+export const cartItemPrice = (item: CartItem) =>
+  item.selectedVariant?.price ?? item.product.price;
 
 interface CartStore {
   items: CartItem[];
   buyNowItems: CartItem[] | null;
-  addItem: (product: Product, quantity?: number) => void;
-  setBuyNowItem: (product: Product, quantity?: number) => void;
+  addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
+  setBuyNowItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
   clearBuyNowItems: () => void;
-  removeItem: (productId: string) => void;
-  removeItems: (productIds: string[]) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string, variantId?: string) => void;
+  removeItems: (compositeKeys: string[]) => void;
+  updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -48,76 +70,82 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       buyNowItems: null,
-      
-      addItem: (product, quantity = 1) => {
+
+      addItem: (product, quantity = 1, variant?) => {
         set((state) => {
-          const existingItem = state.items.find(item => item.product.id === product.id);
+          const key = cartItemKey(product.id, variant?.id);
+          const existingItem = state.items.find(
+            item => cartItemKey(item.product.id, item.selectedVariant?.id) === key
+          );
           if (existingItem) {
             return {
               items: state.items.map(item =>
-                item.product.id === product.id
+                cartItemKey(item.product.id, item.selectedVariant?.id) === key
                   ? { ...item, quantity: item.quantity + quantity }
                   : item
               ),
             };
           }
-          return { items: [...state.items, { product, quantity }] };
+          return { items: [...state.items, { product, quantity, selectedVariant: variant }] };
         });
       },
 
-      setBuyNowItem: (product, quantity = 1) => {
-        set({ buyNowItems: [{ product, quantity }] });
+      setBuyNowItem: (product, quantity = 1, variant?) => {
+        set({ buyNowItems: [{ product, quantity, selectedVariant: variant }] });
       },
 
       clearBuyNowItems: () => set({ buyNowItems: null }),
-      
-      removeItem: (productId) => {
-        set((state) => ({
-          items: state.items.filter(item => item.product.id !== productId),
-        }));
-      },
 
-      removeItems: (productIds) => {
-        const idSet = new Set(productIds);
+      removeItem: (productId, variantId?) => {
+        const key = cartItemKey(productId, variantId);
         set((state) => ({
-          items: state.items.filter(item => !idSet.has(item.product.id)),
-        }));
-      },
-      
-      updateQuantity: (productId, quantity) => {
-        if (quantity <= 0) {
-          get().removeItem(productId);
-          return;
-        }
-        set((state) => ({
-          items: state.items.map(item =>
-            item.product.id === productId ? { ...item, quantity } : item
+          items: state.items.filter(
+            item => cartItemKey(item.product.id, item.selectedVariant?.id) !== key
           ),
         }));
       },
-      
+
+      // compositeKeys: array of cartItemKey(...) strings — removes only matching items
+      removeItems: (compositeKeys) => {
+        const keySet = new Set(compositeKeys);
+        set((state) => ({
+          items: state.items.filter(
+            item => !keySet.has(cartItemKey(item.product.id, item.selectedVariant?.id))
+          ),
+        }));
+      },
+
+      updateQuantity: (productId, quantity, variantId?) => {
+        if (quantity <= 0) {
+          get().removeItem(productId, variantId);
+          return;
+        }
+        const key = cartItemKey(productId, variantId);
+        set((state) => ({
+          items: state.items.map(item =>
+            cartItemKey(item.product.id, item.selectedVariant?.id) === key
+              ? { ...item, quantity }
+              : item
+          ),
+        }));
+      },
+
       clearCart: () => set({ items: [] }),
-      
-      getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0);
-      },
-      
-      getTotalPrice: () => {
-        return get().items.reduce(
-          (total, item) => total + item.product.price * item.quantity,
+
+      getTotalItems: () => get().items.reduce((total, item) => total + item.quantity, 0),
+
+      getTotalPrice: () =>
+        get().items.reduce(
+          (total, item) => total + cartItemPrice(item) * item.quantity,
           0
-        );
-      },
-      
-      getTotalDeliveryFee: () => {
-        return get().items.reduce(
+        ),
+
+      getTotalDeliveryFee: () =>
+        get().items.reduce(
           (total, item) => total + (Number(item.product.deliveryFee) || 0) * item.quantity,
           0
-        );
-      },
+        ),
     }),
-    {
-      name: 'grocery-cart',
-    }
+    { name: 'grocery-cart' }
   )
 );

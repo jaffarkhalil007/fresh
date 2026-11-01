@@ -58,6 +58,19 @@ interface Product {
 
 interface SpecRow { key: string; value: string; }
 
+interface VariantRow {
+  id: string;
+  name: string;
+  price: string;
+  image_url: string;
+  stock_quantity: string;
+  description: string;
+  original_price: string;
+  discount_percentage: string;
+  specs: SpecRow[];
+  uploading?: boolean;
+}
+
 const initialFormData = {
   name: '',
   description: '',
@@ -86,6 +99,7 @@ const AdminProducts = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState(initialFormData);
   const [specRows, setSpecRows] = useState<SpecRow[]>([]);
+  const [variantRows, setVariantRows] = useState<VariantRow[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [quickUploadProductId, setQuickUploadProductId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -148,6 +162,25 @@ const AdminProducts = () => {
       );
     } finally {
       setIsUploadingImage(false);
+    }
+  };
+
+  const handleVariantImageUpload = async (variantId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setVariantRows(prev => prev.map(v => v.id === variantId ? { ...v, uploading: true } : v));
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `variants/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('product-images').upload(path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+      setVariantRows(prev => prev.map(v => v.id === variantId ? { ...v, image_url: data.publicUrl, uploading: false } : v));
+      toast.success('Variant image uploaded');
+    } catch {
+      toast.error('Failed to upload variant image');
+      setVariantRows(prev => prev.map(v => v.id === variantId ? { ...v, uploading: false } : v));
     }
   };
 
@@ -301,10 +334,23 @@ const AdminProducts = () => {
         ? Object.entries(product.specifications).map(([key, value]) => ({ key, value }))
         : [];
       setSpecRows(existingSpecs);
+      const existingVariants: VariantRow[] = ((product as any).variants || []).map((v: any) => ({
+        id: v.id,
+        name: v.name,
+        price: String(v.price),
+        original_price: v.original_price != null ? String(v.original_price) : '',
+        discount_percentage: v.discount_percentage != null ? String(v.discount_percentage) : '',
+        specs: v.specifications ? Object.entries(v.specifications).map(([key, value]) => ({ key, value: String(value) })) : [],
+        image_url: v.image_url || '',
+        stock_quantity: v.stock_quantity != null ? String(v.stock_quantity) : '',
+        description: v.description || '',
+      }));
+      setVariantRows(existingVariants);
     } else {
       setEditingProduct(null);
       setFormData(initialFormData);
       setSpecRows([]);
+      setVariantRows([]);
     }
     setIsDialogOpen(true);
   };
@@ -331,6 +377,27 @@ const AdminProducts = () => {
         return acc;
       }, {});
 
+      const validVariants = variantRows
+        .filter(v => v.name.trim() && v.price.trim())
+        .map(v => {
+          const specsObj = v.specs.reduce<Record<string, string>>((acc, row) => {
+            const k = row.key.trim();
+            if (k) acc[k] = row.value.trim();
+            return acc;
+          }, {});
+          return {
+            id: v.id,
+            name: v.name.trim(),
+            price: parseFloat(v.price),
+            image_url: v.image_url || null,
+            stock_quantity: v.stock_quantity.trim() ? parseInt(v.stock_quantity) : null,
+            description: v.description.trim() || null,
+            original_price: v.original_price.trim() ? parseFloat(v.original_price) : null,
+            discount_percentage: v.discount_percentage.trim() ? parseFloat(v.discount_percentage) : null,
+            specifications: Object.keys(specsObj).length > 0 ? specsObj : null,
+          };
+        });
+
       const productData = {
         name: formData.name,
         description: formData.description || null,
@@ -346,6 +413,7 @@ const AdminProducts = () => {
         stock_quantity: stockQuantity,
         unit: formData.unit,
         specifications: Object.keys(specsObj).length > 0 ? specsObj : null,
+        variants: validVariants.length > 0 ? validVariants : null,
         is_top_selling: formData.is_top_selling,
         is_exclusive: formData.is_exclusive,
         is_promotional: formData.is_promotional,
@@ -654,6 +722,131 @@ const AdminProducts = () => {
                         ))}
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Variants */}
+                <div className="rounded-2xl border border-[#e8e3e5] bg-[#fffdfc] p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a35d70]">Product Variants</p>
+                      <p className="mt-0.5 text-[10px] text-[#9a9298]">e.g. 3 Lens, 12 Lens — each variant has its own name, price and image</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setVariantRows(prev => [...prev, { id: `v_${Date.now()}`, name: '', price: '', image_url: '', stock_quantity: '', description: '', original_price: '', discount_percentage: '', specs: [] }])}
+                      className="flex items-center gap-1 rounded-lg bg-[#f4dfe3] px-3 py-1.5 text-[11px] font-semibold text-[#8f4f60] transition-colors hover:bg-[#f0cfd5]"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Variant
+                    </button>
+                  </div>
+                  {variantRows.length === 0 && (
+                    <p className="text-[11px] text-[#b1a8ad]">No variants. Leave empty if this product has no variants (single option).</p>
+                  )}
+                  <div className="space-y-3">
+                    {variantRows.map((row, i) => (
+                      <div key={row.id} className="rounded-xl border border-[#e8e3e5] bg-[#f9f7f6] p-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          {/* Variant image */}
+                          <label className="relative flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-[#d8cfd3] bg-white transition-colors hover:border-[#a35d70]">
+                            {row.uploading ? (
+                              <Loader2 className="h-5 w-5 animate-spin text-[#a35d70]" />
+                            ) : row.image_url ? (
+                              <img src={row.image_url} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <ImageIcon className="h-5 w-5 text-[#c4b8be]" />
+                            )}
+                            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleVariantImageUpload(row.id, e)} disabled={row.uploading} />
+                          </label>
+                          <Input
+                            value={row.name}
+                            onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, name: e.target.value } : v))}
+                            placeholder="Variant name (e.g. 3 Lens)"
+                            className="h-9 flex-1 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70]"
+                          />
+                          <Input
+                            type="number"
+                            value={row.price}
+                            onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, price: e.target.value } : v))}
+                            placeholder="Price (Rs.)"
+                            className="h-9 w-28 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70]"
+                          />
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.stock_quantity}
+                            onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, stock_quantity: e.target.value } : v))}
+                            placeholder="Stock"
+                            className="h-9 w-20 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setVariantRows(prev => prev.filter((_, idx) => idx !== i))}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#e8e3e5] text-[#9a9298] transition-colors hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <Input
+                          value={row.description}
+                          onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, description: e.target.value } : v))}
+                          placeholder="Variant description (optional)"
+                          className="h-9 w-full rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70] text-xs"
+                        />
+                        {/* Original price & discount */}
+                        <div className="flex gap-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.original_price}
+                            onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, original_price: e.target.value } : v))}
+                            placeholder="Original price (for strikethrough)"
+                            className="h-9 flex-1 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70] text-xs"
+                          />
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={row.discount_percentage}
+                            onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, discount_percentage: e.target.value } : v))}
+                            placeholder="Discount % badge"
+                            className="h-9 w-32 rounded-xl border-[#d8cfd3] bg-white text-[#3f393e] placeholder:text-[#b1a8ad] focus-visible:border-[#a35d70] text-xs"
+                          />
+                        </div>
+                        {/* Variant-level specs */}
+                        <div className="space-y-1.5 rounded-lg border border-[#e8e3e5] bg-white p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9a9298]">Specifications</span>
+                            <button
+                              type="button"
+                              onClick={() => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, specs: [...v.specs, { key: '', value: '' }] } : v))}
+                              className="text-[10px] font-semibold text-[#186049] hover:underline"
+                            >+ Add</button>
+                          </div>
+                          {row.specs.map((spec, si) => (
+                            <div key={si} className="flex gap-1.5">
+                              <Input
+                                value={spec.key}
+                                onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, specs: v.specs.map((s, sj) => sj === si ? { ...s, key: e.target.value } : s) } : v))}
+                                placeholder="Key"
+                                className="h-7 flex-1 rounded-lg border-[#d8cfd3] bg-[#f9f7f6] text-[10px] text-[#3f393e] placeholder:text-[#b1a8ad]"
+                              />
+                              <Input
+                                value={spec.value}
+                                onChange={e => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, specs: v.specs.map((s, sj) => sj === si ? { ...s, value: e.target.value } : s) } : v))}
+                                placeholder="Value"
+                                className="h-7 flex-1 rounded-lg border-[#d8cfd3] bg-[#f9f7f6] text-[10px] text-[#3f393e] placeholder:text-[#b1a8ad]"
+                              />
+                              <button type="button" onClick={() => setVariantRows(prev => prev.map((v, idx) => idx === i ? { ...v, specs: v.specs.filter((_, sj) => sj !== si) } : v))} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9a9298] hover:text-rose-500">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                          {row.specs.length === 0 && <p className="text-[10px] text-[#c4b8be]">No specs for this variant</p>}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ShieldCheck, Check, Copy, Upload, Image as ImageIcon, Tag, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/stores/cartStore';
+import { useCartStore, cartItemPrice } from '@/stores/cartStore';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -127,7 +127,7 @@ const Checkout = () => {
     return () => clearBuyNowItems();
   }, [clearBuyNowItems]);
 
-  const subtotal = checkoutItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
+  const subtotal = checkoutItems.reduce((total, item) => total + cartItemPrice(item) * item.quantity, 0);
   const shipping = subtotal > 0 ? (subtotal >= FREE_DELIVERY_MIN ? 0 : DELIVERY_FEE) : 0;
   const total = subtotal + shipping - couponDiscount;
 
@@ -248,8 +248,10 @@ const Checkout = () => {
       const orderItemsToInsert = checkoutItems.map((item) => ({
         order_id: order!.id,
         product_id: isUuid(item.product.id) ? item.product.id : null,
-        product_name: item.product.name,
-        product_price: item.product.price,
+        product_name: item.selectedVariant
+          ? `${item.product.name} (${item.selectedVariant.name})`
+          : item.product.name,
+        product_price: cartItemPrice(item),
         quantity: item.quantity,
       }));
 
@@ -554,16 +556,21 @@ const Checkout = () => {
                           <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#186049]">Items ({checkoutItems.length})</h3>
                           <div className="space-y-3">
                             {checkoutItems.map((item) => (
-                              <div key={item.product.id} className="flex items-center gap-4 border-t border-[#e8e3e5] py-3">
+                              <div key={`${item.product.id}_${item.selectedVariant?.id || ''}`} className="flex items-center gap-4 border-t border-[#e8e3e5] py-3">
                                 <div className="flex h-14 w-14 items-center justify-center overflow-hidden bg-[#f4f0ed] p-1">
-                                  <img src={item.product.imageUrl} alt={item.product.name} className="max-h-full max-w-full object-contain" />
+                                  <img src={item.selectedVariant?.image_url || item.product.imageUrl} alt={item.product.name} className="max-h-full max-w-full object-contain" />
                                 </div>
                                 <div className="flex-1">
                                   <div className="line-clamp-1 text-sm font-medium text-[#3f393e]">{item.product.name}</div>
-                                  <div className="text-xs text-[#9a9298]">Qty: {item.quantity} × {formatPrice(item.product.price)}</div>
+                                  {item.selectedVariant && (
+                                    <div className="mt-0.5 inline-flex rounded bg-[#f4f0ed] px-1.5 py-0.5 text-[9px] font-semibold text-[#186049]">
+                                      {item.selectedVariant.name}
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-[#9a9298]">Qty: {item.quantity} × {formatPrice(cartItemPrice(item))}</div>
                                 </div>
                                 <div className="text-sm font-bold text-[#186049]">
-                                  {formatPrice(item.product.price * item.quantity)}
+                                  {formatPrice(cartItemPrice(item) * item.quantity)}
                                 </div>
                               </div>
                             ))}

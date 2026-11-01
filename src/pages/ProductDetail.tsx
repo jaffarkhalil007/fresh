@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Star,
@@ -20,7 +20,7 @@ import ProductCard from "@/components/products/ProductCard";
 import ProductReviews from "@/components/products/ProductReviews";
 
 import { useProducts, useProduct } from "@/hooks/useProducts";
-import { useCartStore } from "@/stores/cartStore";
+import { useCartStore, type ProductVariant } from "@/stores/cartStore";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/currency";
 import { optimizeImageUrl } from "@/lib/utils";
@@ -35,9 +35,49 @@ const ProductDetail = () => {
   const { data: product, isLoading: productLoading } = useProduct(id);
   const { data: products = [], isLoading: productsLoading } = useProducts();
   const [activeImage, setActiveImage] = useState(0);
-  const galleryImages = product?.images?.length ? product.images : [product?.imageUrl ?? ''];
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+
+  // When product loads, default to first variant
+  useEffect(() => {
+    if (product?.variants?.length) {
+      setSelectedVariant(product.variants[0]);
+    } else {
+      setSelectedVariant(null);
+    }
+    setActiveImage(0);
+  }, [product?.id]);
+
+  // Build gallery: if variant has its own image, show it first
+  const baseImages = product?.images?.length ? product.images : [product?.imageUrl ?? ''];
+  const galleryImages = selectedVariant?.image_url
+    ? [selectedVariant.image_url, ...baseImages.filter(u => u !== selectedVariant.image_url)]
+    : baseImages;
+
   const showPrevImage = () => setActiveImage(i => (i - 1 + galleryImages.length) % galleryImages.length);
   const showNextImage = () => setActiveImage(i => (i + 1) % galleryImages.length);
+
+  // Touch swipe (mobile)
+  const touchStartX = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) > 40) dx < 0 ? showNextImage() : showPrevImage();
+    touchStartX.current = null;
+  };
+
+  // Mouse drag (desktop)
+  const mouseStartX = useRef<number | null>(null);
+  const isDragging = useRef(false);
+  const handleMouseDown = (e: React.MouseEvent) => { mouseStartX.current = e.clientX; isDragging.current = false; };
+  const handleMouseMove = (e: React.MouseEvent) => { if (mouseStartX.current !== null && Math.abs(e.clientX - mouseStartX.current) > 5) isDragging.current = true; };
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (mouseStartX.current === null) return;
+    const dx = e.clientX - mouseStartX.current;
+    if (Math.abs(dx) > 40) dx < 0 ? showNextImage() : showPrevImage();
+    mouseStartX.current = null;
+  };
+
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
   // Fetch review stats on page load — independent of tab state
@@ -115,15 +155,13 @@ const ProductDetail = () => {
   }
 
   const handleAddToCart = () => {
-    addItem(product, quantity);
-    toast.success(`${product.name} added to cart`, {
-      className:
-        "glass !bg-background/80 !border-emerald-500/30 !text-foreground",
-    });
+    addItem(product, quantity, selectedVariant ?? undefined);
+    const variantLabel = selectedVariant ? ` — ${selectedVariant.name}` : '';
+    toast.success(`${product.name}${variantLabel} added to cart`);
   };
 
   const handleBuyNow = () => {
-    setBuyNowItem(product, quantity);
+    setBuyNowItem(product, quantity, selectedVariant ?? undefined);
     navigate("/checkout");
   };
 
@@ -131,9 +169,33 @@ const ProductDetail = () => {
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
 
-  const { displayPrice, originalPrice: flatOriginal, flatBadge } = applyDiscount(product.price, product.originalPrice);
-  const shownOriginal = flatOriginal;
-  const saleBadge = product.discountPercentage ? `-${product.discountPercentage}%` : flatBadge ? `-${flatBadge}` : null;
+  // Show variant name in title when selected, otherwise product name
+  const displayName = selectedVariant ? selectedVariant.name : product.name;
+  const displayStock = selectedVariant?.stock_quantity != null
+    ? selectedVariant.stock_quantity
+    : product.stockQuantity;
+  const displayDescription = (selectedVariant?.description || product.description) ?? '';
+
+  // Price / discount per-variant (falls back to product-level)
+  const basePrice = selectedVariant ? selectedVariant.price : product.price;
+  const baseOriginal = selectedVariant
+    ? (selectedVariant.original_price ?? undefined)
+    : product.originalPrice;
+  const { displayPrice, originalPrice: flatOriginal, flatBadge } = applyDiscount(basePrice, baseOriginal);
+  const shownOriginal = flatOriginal && flatOriginal > displayPrice ? flatOriginal : undefined;
+  const saleBadge = selectedVariant
+    ? (selectedVariant.discount_percentage
+        ? `-${Math.round(selectedVariant.discount_percentage)}%`
+        : shownOriginal
+          ? `-${Math.round((1 - displayPrice / shownOriginal) * 100)}%`
+          : null)
+    : (product.discountPercentage ? `-${product.discountPercentage}%` : flatBadge ? `-${flatBadge}` : null);
+
+  // Specifications: variant-level overrides product-level
+  const displaySpecifications =
+    (selectedVariant?.specifications && Object.keys(selectedVariant.specifications).length > 0)
+      ? selectedVariant.specifications
+      : product.specifications;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fffdfc] selection:bg-[#d9e7e3]">
@@ -161,7 +223,15 @@ const ProductDetail = () => {
               className="relative"
             >
               {/* Main image */}
-              <div className="relative aspect-square w-full overflow-hidden bg-[#f4f0ed] md:aspect-[4/3]">
+              <div
+                className="relative aspect-square w-full cursor-grab overflow-hidden bg-[#f4f0ed] active:cursor-grabbing md:aspect-[16/9]"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={() => { mouseStartX.current = null; }}
+              >
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={activeImage}
@@ -173,7 +243,7 @@ const ProductDetail = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="h-full w-full object-contain p-6 mix-blend-multiply md:p-8"
+                    className="h-full w-full object-cover"
                   />
                 </AnimatePresence>
 
@@ -184,17 +254,17 @@ const ProductDetail = () => {
                       type="button"
                       onClick={showPrevImage}
                       aria-label="Previous image"
-                      className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md transition-transform hover:scale-105 active:scale-95"
+                      className="absolute left-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 backdrop-blur-sm transition-all hover:bg-white/60 active:scale-95"
                     >
-                      <ChevronLeft className="h-4 w-4 text-[#3f393e]" />
+                      <ChevronLeft className="h-3.5 w-3.5 text-[#3f393e]" />
                     </button>
                     <button
                       type="button"
                       onClick={showNextImage}
                       aria-label="Next image"
-                      className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md transition-transform hover:scale-105 active:scale-95"
+                      className="absolute right-2 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/30 backdrop-blur-sm transition-all hover:bg-white/60 active:scale-95"
                     >
-                      <ChevronRight className="h-4 w-4 text-[#3f393e]" />
+                      <ChevronRight className="h-3.5 w-3.5 text-[#3f393e]" />
                     </button>
                   </>
                 )}
@@ -251,7 +321,7 @@ const ProductDetail = () => {
               </div> */}
 
               <h1 className="mb-2 max-w-xl font-serif text-xl leading-tight text-[#242024] md:text-3xl">
-                {product.name}
+                {displayName}
               </h1>
 
               <div className="mb-3 flex items-center gap-2">
@@ -295,6 +365,56 @@ const ProductDetail = () => {
                 )}
               </div>
 
+              {/* Variant selector */}
+              {product.variants && product.variants.length > 0 && (
+                <div className="mb-4 rounded-xl border border-[#e8e3e5] bg-[#f9f7f6] p-3">
+                  <div className="mb-2.5 flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#777077]">
+                      Choose Option
+                    </p>
+                    {selectedVariant && (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-[#186049]">
+                        <ShieldCheck className="h-3 w-3" />
+                        Selected: {selectedVariant.name}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants.map((v) => {
+                      const isActive = selectedVariant?.id === v.id;
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => { setSelectedVariant(v); setActiveImage(0); }}
+                          className={`group relative flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-left transition-all ${
+                            isActive
+                              ? 'border-[#186049] bg-white shadow-sm'
+                              : 'border-[#e8e3e5] bg-white hover:border-[#186049]/40'
+                          }`}
+                        >
+                          {/* Radio dot */}
+                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                            isActive ? 'border-[#186049]' : 'border-[#c4b8be] group-hover:border-[#186049]/60'
+                          }`}>
+                            {isActive && <span className="h-2 w-2 rounded-full bg-[#186049]" />}
+                          </span>
+                          <span className="flex flex-col">
+                            <span className={`text-xs font-semibold leading-tight ${isActive ? 'text-[#186049]' : 'text-[#3f393e]'}`}>
+                              {v.name}
+                            </span>
+                            <span className={`text-[10px] font-medium ${isActive ? 'text-[#186049]/70' : 'text-[#9a9298]'}`}>
+                              {formatPrice(v.price)}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-[9px] text-[#b1a8ad]">Tap an option to select it</p>
+                </div>
+              )}
+
               {/* Unit & Stock — small info row below price */}
               <div className="mb-3 flex items-center gap-3">
                 <span className="text-xs text-[#9a9298]">
@@ -303,8 +423,8 @@ const ProductDetail = () => {
                 <span className="text-[#e3dadd]">·</span>
                 <span className="text-xs text-[#9a9298]">
                   Stock:{" "}
-                  {product.stockQuantity > 0 ? (
-                    <span className="font-medium text-[#5f595d]">{product.stockQuantity} available</span>
+                  {displayStock > 0 ? (
+                    <span className="font-medium text-[#5f595d]">{displayStock} available</span>
                   ) : (
                     <span className="font-medium text-rose-500">Out of stock</span>
                   )}
@@ -337,14 +457,14 @@ const ProductDetail = () => {
                   <button
                     className="flex h-9 w-full items-center justify-center gap-1.5 bg-[#186049] text-[9px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                     onClick={handleBuyNow}
-                    disabled={product.stockQuantity === 0}
+                    disabled={displayStock === 0}
                   >
                     <ShoppingBag className="h-3.5 w-3.5" /> Buy Now
                   </button>
                   <button
                     className="flex h-9 w-full items-center justify-center gap-1.5 bg-[#242024] text-[9px] font-semibold uppercase tracking-[0.08em] text-white transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                     onClick={handleAddToCart}
-                    disabled={product.stockQuantity === 0}
+                    disabled={displayStock === 0}
                   >
                     <ShoppingCart className="h-3.5 w-3.5" />
                     Add to Cart
@@ -426,15 +546,15 @@ const ProductDetail = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="leading-relaxed text-[#5f595d]"
                 >
-                  <p className="mb-4 text-xs leading-5">{product.description}</p>
+                  <p className="mb-4 text-xs leading-5">{displayDescription}</p>
 
-                  {product.specifications && Object.keys(product.specifications).length > 0 && (
+                  {displaySpecifications && Object.keys(displaySpecifications).length > 0 && (
                     <>
                       <h3 className="mb-3 font-serif text-2xl text-[#242024]">
                         Specifications
                       </h3>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {Object.entries(product.specifications).map(([key, value]) => (
+                        {Object.entries(displaySpecifications).map(([key, value]) => (
                           <div key={key} className="flex justify-between border-t border-[#e8e3e5] p-2.5">
                             <span className="text-xs text-[#9a9298]">{key}</span>
                             <span className="text-xs font-medium text-[#3f393e]">{value}</span>

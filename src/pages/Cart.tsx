@@ -4,7 +4,7 @@ import { Minus, Plus, Trash2, ArrowLeft, ArrowRight, ShoppingBag, Tag, X, Check 
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { useCartStore } from '@/stores/cartStore';
+import { useCartStore, cartItemKey, cartItemPrice } from '@/stores/cartStore';
 import { formatPrice } from '@/lib/currency';
 import { supabase } from '@/integrations/supabase/client';
 import { useDeliverySettings } from '@/hooks/useDeliverySettings';
@@ -28,38 +28,40 @@ const Cart = () => {
   const FREE_DELIVERY_MIN = deliverySettings?.free_delivery_minimum ?? 1000;
   const DELIVERY_FEE = deliverySettings?.delivery_fee ?? 150;
 
-  // ── Selection state (all selected by default) ──
+  // ── Selection state — keyed by composite cartItemKey ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(items.map(i => i.product.id))
+    () => new Set(items.map(i => cartItemKey(i.product.id, i.selectedVariant?.id)))
   );
 
   const allSelected = items.length > 0 && selectedIds.size === items.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < items.length;
 
-  const toggleItem = (id: string) => {
+  const toggleItem = (key: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
 
   const toggleAll = () => {
     if (allSelected) setSelectedIds(new Set());
-    else setSelectedIds(new Set(items.map(i => i.product.id)));
+    else setSelectedIds(new Set(items.map(i => cartItemKey(i.product.id, i.selectedVariant?.id))));
   };
 
   // Keep selectedIds in sync when items are removed
   const syncedSelectedIds = useMemo(() => {
-    const itemIds = new Set(items.map(i => i.product.id));
-    return new Set([...selectedIds].filter(id => itemIds.has(id)));
+    const itemKeys = new Set(items.map(i => cartItemKey(i.product.id, i.selectedVariant?.id)));
+    return new Set([...selectedIds].filter(k => itemKeys.has(k)));
   }, [items, selectedIds]);
 
-  const selectedItems = items.filter(i => syncedSelectedIds.has(i.product.id));
+  const selectedItems = items.filter(i =>
+    syncedSelectedIds.has(cartItemKey(i.product.id, i.selectedVariant?.id))
+  );
 
   // ── Pricing (based on selection only) ──
-  const subtotal = selectedItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  const subtotal = selectedItems.reduce((s, i) => s + cartItemPrice(i) * i.quantity, 0);
   const shipping = subtotal > 0 ? (subtotal >= FREE_DELIVERY_MIN ? 0 : DELIVERY_FEE) : 0;
   const progressToFreeShipping = Math.min((subtotal / FREE_DELIVERY_MIN) * 100, 100);
 
@@ -118,7 +120,8 @@ const Cart = () => {
     navigate('/checkout', {
       state: {
         selectedItems,
-        selectedProductIds: [...syncedSelectedIds],
+        // composite keys used by Checkout to remove exactly these items after order
+        selectedProductIds: selectedItems.map(i => cartItemKey(i.product.id, i.selectedVariant?.id)),
         appliedCoupon,
         discount,
       },
@@ -185,10 +188,13 @@ const Cart = () => {
 
                 <AnimatePresence initial={false}>
                   {items.map((item, index) => {
-                    const isSelected = syncedSelectedIds.has(item.product.id);
+                    const key = cartItemKey(item.product.id, item.selectedVariant?.id);
+                    const isSelected = syncedSelectedIds.has(key);
+                    const itemImage = item.selectedVariant?.image_url || item.product.imageUrl;
+                    const itemPrice = cartItemPrice(item);
                     return (
                       <motion.div
-                        key={item.product.id}
+                        key={key}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20, scale: 0.95 }}
@@ -197,7 +203,7 @@ const Cart = () => {
                         <div className={`group flex gap-3 border-t border-[#e8e3e5] py-5 transition-colors md:gap-5 ${!isSelected ? 'opacity-60' : ''}`}>
                           {/* Checkbox */}
                           <button
-                            onClick={() => toggleItem(item.product.id)}
+                            onClick={() => toggleItem(key)}
                             className={`mt-6 flex h-5 w-5 shrink-0 items-center justify-center self-start border transition-colors ${
                               isSelected
                                 ? 'border-[#186049] bg-[#186049]'
@@ -209,7 +215,7 @@ const Cart = () => {
 
                           <Link to={`/product/${item.product.id}`} className="relative h-24 w-24 shrink-0 overflow-hidden bg-[#f4f0ed] p-2">
                             <img
-                              src={item.product.imageUrl}
+                              src={itemImage}
                               alt={item.product.name}
                               className="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110"
                             />
@@ -221,17 +227,22 @@ const Cart = () => {
                                 <Link to={`/product/${item.product.id}`} className="line-clamp-1 font-medium text-[#3f393e] transition-colors hover:text-[#186049]">
                                   {item.product.name}
                                 </Link>
+                                {item.selectedVariant && (
+                                  <div className="mt-0.5 inline-flex items-center rounded bg-[#f4f0ed] px-1.5 py-0.5 text-[9px] font-semibold text-[#186049]">
+                                    {item.selectedVariant.name}
+                                  </div>
+                                )}
                                 <div className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9a9298]">
                                   {item.product.category}
                                 </div>
                               </div>
                               <div className="text-right shrink-0">
                                 <div className="font-semibold text-[#186049]">
-                                  {formatPrice(item.product.price * item.quantity)}
+                                  {formatPrice(itemPrice * item.quantity)}
                                 </div>
                                 {item.quantity > 1 && (
                                   <div className="text-[10px] text-[#9a9298]">
-                                    {formatPrice(item.product.price)} each
+                                    {formatPrice(itemPrice)} each
                                   </div>
                                 )}
                               </div>
@@ -241,7 +252,7 @@ const Cart = () => {
                               <div className="flex h-9 w-28 items-center justify-between border border-[#d8cfd3] bg-white px-1">
                                 <button
                                   className="flex h-7 w-7 items-center justify-center text-[#3f393e] transition-colors hover:bg-[#eee9eb] disabled:opacity-50"
-                                  onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.selectedVariant?.id)}
                                   disabled={item.quantity <= 1}
                                 >
                                   <Minus className="h-3 w-3" />
@@ -249,14 +260,14 @@ const Cart = () => {
                                 <span className="text-sm font-medium text-[#3f393e]">{item.quantity}</span>
                                 <button
                                   className="flex h-7 w-7 items-center justify-center text-[#3f393e] transition-colors hover:bg-[#eee9eb]"
-                                  onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                  onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.selectedVariant?.id)}
                                 >
                                   <Plus className="h-3 w-3" />
                                 </button>
                               </div>
 
                               <button
-                                onClick={() => removeItem(item.product.id)}
+                                onClick={() => removeItem(item.product.id, item.selectedVariant?.id)}
                                 className="flex h-9 w-9 items-center justify-center text-[#9a9298] transition-colors hover:bg-[#fde8e8] hover:text-rose-500"
                               >
                                 <Trash2 className="h-4 w-4" />
