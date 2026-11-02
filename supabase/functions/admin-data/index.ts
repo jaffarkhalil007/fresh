@@ -92,10 +92,8 @@ serve(async (req) => {
         }
 
         const adminUserId = Deno.env.get('ADMIN_USER_ID') ?? '';
-        if (
-          adminEmailConfig &&
-          userEmail?.trim().toLowerCase() === adminEmailConfig.trim().toLowerCase()
-        ) {
+        const adminEmails = adminEmailConfig.split(',').map((e) => e.trim().toLowerCase());
+        if (adminEmails.length && userEmail && adminEmails.includes(userEmail.trim().toLowerCase())) {
           isAdmin = true;
         }
 

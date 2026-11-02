@@ -41,7 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const userEmail = user.email;
           
-          if (import.meta.env.VITE_ADMIN_EMAIL && userEmail === import.meta.env.VITE_ADMIN_EMAIL) {
+          const adminEmails = (import.meta.env.VITE_ADMIN_EMAIL ?? '').split(',').map((e: string) => e.trim().toLowerCase());
+          if (adminEmails.length && adminEmails.includes(userEmail?.toLowerCase())) {
             setIsAdmin(true);
             return;
           }
